@@ -1,6 +1,6 @@
 # Junimo Mods
 
-Stardew mods for controlling the server.
+Stardew mods for JunimoHost
 
 ## Junimo Server
 
