@@ -4,7 +4,7 @@ namespace JunimoServer.Services.GameCreator
 {
     public class NewGameConfig
     {
-        public int WhichFarm { get; set; } = 3;
+        public int WhichFarm { get; set; } = 0;
         public bool UseSeperateWallets { get; set; } = false;
         public int StartingCabins { get; set; } = 1;
         public bool CatPerson { get; set; } = false;

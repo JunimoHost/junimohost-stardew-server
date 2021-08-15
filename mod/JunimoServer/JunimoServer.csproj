@@ -45,6 +45,8 @@
     <Compile Include="ModEntry.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\GameCreator\NewGameConfig.cs" />
+    <Compile Include="Services\GameLoader\GameLoaderSaveData.cs" />
+    <Compile Include="Services\GameLoader\GameLoaderService.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Pathoschild.Stardew.ModBuildConfig">
@@ -54,5 +56,6 @@
   <ItemGroup>
     <None Include="manifest.json" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
