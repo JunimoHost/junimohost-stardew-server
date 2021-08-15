@@ -53,6 +53,7 @@
     <Compile Include="Services\GameCreator\NewGameConfig.cs" />
     <Compile Include="Services\GameLoader\GameLoaderSaveData.cs" />
     <Compile Include="Services\GameLoader\GameLoaderService.cs" />
+    <Compile Include="Services\GRPCGameManager\GRPCGameManagerService.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Google.Api.Gax.Grpc">
@@ -62,6 +63,9 @@
       <Version>3.17.3</Version>
     </PackageReference>
     <PackageReference Include="Grpc">
+      <Version>2.39.1</Version>
+    </PackageReference>
+    <PackageReference Include="Grpc.Reflection">
       <Version>2.39.1</Version>
     </PackageReference>
     <PackageReference Include="Pathoschild.Stardew.ModBuildConfig">

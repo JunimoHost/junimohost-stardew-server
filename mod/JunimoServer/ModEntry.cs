@@ -3,9 +3,20 @@ using JunimoServer.Services.GameLoader;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Menus;
+using JunimoServer.GRPC;
+using System.Threading.Tasks;
+using Google.Protobuf.WellKnownTypes;
+using Grpc.Core;
+using JunimoServer.Services.GRPCGameManager;
+using Grpc.Reflection;
+using System.Collections.Generic;
+using Grpc.Reflection.V1Alpha;
 
 namespace JunimoServer
 {
+
+
+
     internal class ModEntry : Mod
     {
 
@@ -20,6 +31,19 @@ namespace JunimoServer
             gameLoader = new GameLoaderService(helper, Monitor);
             helper.Events.Display.RenderedActiveMenu += OnRenderedActiveMenu;
             helper.Events.Input.ButtonPressed += OnButtonPressed;
+
+            GRPCGameManagerService gameManagerService = new GRPCGameManagerService(gameCreator, gameLoader);
+            ReflectionServiceImpl reflectionServiceImpl = new ReflectionServiceImpl(GameManagerService.Descriptor);
+            Server server = new Server
+            {
+                Services = {
+                    GameManagerService.BindService(gameManagerService),
+                    ServerReflection.BindService(reflectionServiceImpl),
+                },
+                Ports = { new ServerPort("localhost", 50051, ServerCredentials.Insecure) }
+            };
+            server.Start();
+
 
         }
 
@@ -46,17 +70,6 @@ namespace JunimoServer
             {
                 gameLoader.LoadSave();
             }
-            else
-            {
-
-                string farmName = "LoadTest3";
-                gameCreator.CreateNewGame(new NewGameConfig { FarmName = farmName });
-
-                // Save name goes from nothing -> _uuid -> farmName_uuid (once loaded in completely)
-                // This should always result in the correct name
-                gameLoader.SetSaveNameToLoad(farmName + Constants.SaveFolderName);
-            }
-
         }
     }
 

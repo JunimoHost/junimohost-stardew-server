@@ -1,4 +1,5 @@
-﻿using StardewModdingAPI;
+﻿using Microsoft.Xna.Framework;
+using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Menus;
 using System;
@@ -35,10 +36,21 @@ namespace JunimoServer.Services.GameCreator
 
             Game1.multiplayerMode = 2; // multiplayer enabled
 
-            if (Game1.activeClickableMenu is TitleMenu menu)
+            if (Game1.activeClickableMenu is IClickableMenu menu && menu != null)
             {
-                menu.createdNewCharacter(skipIntro: true);
+                menu.exitThisMenuNoSound();
             }
+
+            // From TitleMenu.createdNewCharacter
+            Game1.loadForNewGame(false);
+            Game1.saveOnNewDay = true;
+            Game1.player.eventsSeen.Add(60367);
+            Game1.player.currentLocation = Utility.getHomeOfFarmer(Game1.player);
+            Game1.player.Position = new Vector2(9f, 9f) * 64f;
+            Game1.player.isInBed.Value = true;
+            Game1.NewDay(0f);
+            Game1.exitActiveMenu();
+            Game1.setGameMode(3);
         }
 
     }

@@ -76,7 +76,7 @@ namespace JunimoServer.Services.GameLoader
         {
             saveData.SaveNameToLoad = saveName;
             helper.Data.WriteGlobalData(SAVE_KEY, saveData);
-            monitor.Log($"Save set to load: {saveName}");
+            monitor.Log($"Save set to load: {saveName}", LogLevel.Info);
         }
 
         private string GetSavePath(string saveName)
