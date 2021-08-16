@@ -40,7 +40,7 @@ namespace JunimoServer
                     GameManagerService.BindService(gameManagerService),
                     ServerReflection.BindService(reflectionServiceImpl),
                 },
-                Ports = { new ServerPort("localhost", 50051, ServerCredentials.Insecure) }
+                Ports = { new ServerPort("0.0.0.0", 50051, ServerCredentials.Insecure) }
             };
             server.Start();
 
