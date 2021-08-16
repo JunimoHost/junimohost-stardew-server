@@ -5,7 +5,6 @@ services:
     build: docker
     container_name: stardew
     environment:
-      - "VNC_PASSWORD=VNC_STARDEW_STARDEW_STARDEW_#123"
       - "DISPLAY_HEIGHT=800"
       - "DISPLAY_WIDTH=1280"
 
