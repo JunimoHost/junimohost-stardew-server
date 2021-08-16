@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: junimo
+  name: test-service
+spec:
+  type: NodePort
+  ports:
+    - port: 24642
+      targetPort: 24642
+      name: udp
+    - port: 50051
+      targetPort: 50051
+      name: grpc
+    - port: 5800
+      targetPort: 5800
+      name: http
+  selector:
+    app: stardew
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stardew
+  namespace: junimo
+spec:
+  selector:
+    matchLabels:
+      app: stardew
+  template:
+    metadata:
+      labels:
+        app: stardew
+    spec:
+      containers:
+      - name: stardew
+        image: gcr.io/junimo-host/stardew-base:dev
+        ports:
+        - containerPort: 24642
+        - containerPort: 5800
+        - containerPort: 50051

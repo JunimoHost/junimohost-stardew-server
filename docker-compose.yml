@@ -1,0 +1,24 @@
+version: "3.3"
+
+services:
+  stardew:
+    build: docker
+    container_name: stardew
+    environment:
+      - "VNC_PASSWORD=VNC_STARDEW_STARDEW_STARDEW_#123"
+      - "DISPLAY_HEIGHT=800"
+      - "DISPLAY_WIDTH=1280"
+
+    ports:
+      # # VNC
+      # - 5902:5900
+      # NOVNC WEB
+      - 8090:5800
+      # Game
+      - 24642:24642/udp
+      - 50051:50051
+
+    volumes:
+      # Saves go here now
+      - ./data:/config/xdg/config/StardewValley
+      # - ./data/mods:/data/Stardew/Stardew Valley/Mods
