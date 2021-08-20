@@ -1,5 +1,4 @@
-﻿using JunimoServer.GRPC;
-using System;
+﻿using System;
 
 namespace JunimoServer.Services.GameCreator
 {
@@ -11,15 +10,15 @@ namespace JunimoServer.Services.GameCreator
         public bool CatPerson { get; set; } = false;
         public string FarmName { get; set; } = "Junimo";
 
-        public static NewGameConfig FromCreateGameRequest(CreateGameRequest req) {
-            return new NewGameConfig { 
-                WhichFarm = req.WhichFarm,
-                UseSeperateWallets = req.UseSeperateWallets,
-                StartingCabins = req.StartingCabins,
-                CatPerson = req.CatPerson,
-                FarmName = req.FarmName,
-            };
-        }
+        //public static NewGameConfig FromCreateGameRequest(CreateGameRequest req) {
+        //    return new NewGameConfig { 
+        //        WhichFarm = req.WhichFarm,
+        //        UseSeperateWallets = req.UseSeperateWallets,
+        //        StartingCabins = req.StartingCabins,
+        //        CatPerson = req.CatPerson,
+        //        FarmName = req.FarmName,
+        //    };
+        //}
 
     }
 }

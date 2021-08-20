@@ -3,46 +3,92 @@ using JunimoServer.Services.GameLoader;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Menus;
-using JunimoServer.GRPC;
+using SimpleHttp;
+using System.Threading;
+using System.Net;
 using System.Threading.Tasks;
-using Google.Protobuf.WellKnownTypes;
-using Grpc.Core;
-using JunimoServer.Services.GRPCGameManager;
-using Grpc.Reflection;
 using System.Collections.Generic;
-using Grpc.Reflection.V1Alpha;
+using JunimoServer.Controllers;
+using System;
 
 namespace JunimoServer
 {
 
-
-
     internal class ModEntry : Mod
     {
 
-        private GameCreatorService gameCreator;
-        private GameLoaderService gameLoader;
+        private GameCreatorService gameCreatorService;
+        private GameCreatorController gameCreatorController;
+        private GameLoaderService gameLoaderService;
         private IModHelper helper;
         private bool titleLaunched = false;
+
         public override void Entry(IModHelper helper)
         {
             this.helper = helper;
-            gameCreator = new GameCreatorService();
-            gameLoader = new GameLoaderService(helper, Monitor);
+            gameLoaderService = new GameLoaderService(helper, Monitor);
+            gameCreatorService = new GameCreatorService(gameLoaderService);
+            gameCreatorController = new GameCreatorController(Monitor, gameCreatorService);
             helper.Events.Display.RenderedActiveMenu += OnRenderedActiveMenu;
             helper.Events.Input.ButtonPressed += OnButtonPressed;
 
-            GRPCGameManagerService gameManagerService = new GRPCGameManagerService(gameCreator, gameLoader);
-            ReflectionServiceImpl reflectionServiceImpl = new ReflectionServiceImpl(GameManagerService.Descriptor);
-            Server server = new Server
+            Monitor.Log("REST API starting: http://localhost:8081", LogLevel.Info);
+
+            var cts = new CancellationTokenSource();
+            HttpServer.ListenAsync(8081, cts.Token, OnHttp);
+
+            Monitor.Log("REST API has started: http://localhost:8081", LogLevel.Info);
+
+
+
+            //GRPCGameManagerService gameManagerService = new GRPCGameManagerService(gameCreator, gameLoader, Monitor);
+            ////ReflectionServiceImpl reflectionServiceImpl = new ReflectionServiceImpl(GameManagerService.Descriptor);
+            //Server server = new Server
+            //{
+            //    Services = {
+            //        GameManagerService.BindService(gameManagerService)
+            //        //ServerReflection.BindService(reflectionServiceImpl),
+            //    },
+            //    Ports = { new ServerPort("0.0.0.0", 50051, ServerCredentials.Insecure) }
+            //};
+            //this.Monitor.Log($"Starting Server on 50051...", LogLevel.Debug);
+
+            //server.Start();
+
+
+        }
+
+        private async Task OnHttp(HttpListenerRequest rq, HttpListenerResponse res)
+        {
+            try
             {
-                Services = {
-                    GameManagerService.BindService(gameManagerService),
-                    ServerReflection.BindService(reflectionServiceImpl),
-                },
-                Ports = { new ServerPort("0.0.0.0", 50051, ServerCredentials.Insecure) }
-            };
-            server.Start();
+                Dictionary<string, string> queryArgs = new Dictionary<string, string>();
+
+                if (rq.HttpMethod == "POST" && rq.Url.PathAndQuery.TryMatch("/game", queryArgs))
+                {
+
+                    string body = rq.ParseBody();
+                    if (body != null)
+                    {
+                        gameCreatorController.CreateGame(body);
+                        res.AsText("Success!");
+                    }
+                    else
+                    {
+                        res.AsText("No body");
+                    }
+                }
+                else
+                {
+                    res.StatusCode = 404;
+                    res.AsText("Route not found");
+                }
+            }
+            catch (Exception ex)
+            {
+                res.StatusCode = 500;
+                res.AsText(ex.Message);
+            }
 
 
         }
@@ -66,9 +112,9 @@ namespace JunimoServer
 
         private void OnTitleMenuLaunched()
         {
-            if (gameLoader.HasLoadableSave())
+            if (gameLoaderService.HasLoadableSave())
             {
-                gameLoader.LoadSave();
+                gameLoaderService.LoadSave();
             }
         }
     }

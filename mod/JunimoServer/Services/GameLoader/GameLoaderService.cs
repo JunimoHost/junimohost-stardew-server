@@ -79,6 +79,18 @@ namespace JunimoServer.Services.GameLoader
             monitor.Log($"Save set to load: {saveName}", LogLevel.Info);
         }
 
+        public void SetCurrentGameAsSaveToLoad(string FarmName)
+        {
+            // Save name goes from nothing -> _uuid -> farmName_uuid (once loaded in completely)
+            string saveName = Constants.SaveFolderName;
+            if (Constants.SaveFolderName.Substring(0, 1) == "_") // savename is in midpoint
+            {
+                saveName = SaveGame.FilterFileName(FarmName) + saveName;
+            }
+
+            SetSaveNameToLoad(saveName);
+        }
+
         private string GetSavePath(string saveName)
         {
             return Path.Combine(Constants.SavesPath, saveName);

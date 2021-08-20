@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using JunimoServer.Services.GameLoader;
+using Microsoft.Xna.Framework;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Menus;
@@ -10,8 +11,9 @@ namespace JunimoServer.Services.GameCreator
 
     class GameCreatorService
     {
-
-        public GameCreatorService() {
+        private GameLoaderService gameLoader;
+        public GameCreatorService(GameLoaderService gameLoader) {
+            this.gameLoader = gameLoader;
         }
 
         public void CreateNewGame(NewGameConfig config)
@@ -51,6 +53,8 @@ namespace JunimoServer.Services.GameCreator
             Game1.NewDay(0f);
             Game1.exitActiveMenu();
             Game1.setGameMode(3);
+
+            gameLoader.SetCurrentGameAsSaveToLoad(config.FarmName);
         }
 
     }
