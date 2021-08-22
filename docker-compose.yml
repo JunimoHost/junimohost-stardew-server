@@ -14,8 +14,8 @@ services:
       # NOVNC WEB
       - 8090:5800
       # Game
-      - 24642:24642/udp
-      - 50051:50051
+      - 24643:24642/udp
+      - 8082:8081
 
     volumes:
       # Saves go here now
