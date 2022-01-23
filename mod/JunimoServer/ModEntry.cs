@@ -10,6 +10,8 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using JunimoServer.Controllers;
 using System;
+using HarmonyLib;
+using JunimoServer.Services.CropSaver;
 
 namespace JunimoServer
 {
@@ -25,6 +27,8 @@ namespace JunimoServer
 
         public override void Entry(IModHelper helper)
         {
+            var harmony = new Harmony(this.ModManifest.UniqueID);
+            var cropSaver = new CropSaver(helper, harmony, Monitor);
             this.helper = helper;
             gameLoaderService = new GameLoaderService(helper, Monitor);
             gameCreatorService = new GameCreatorService(gameLoaderService);

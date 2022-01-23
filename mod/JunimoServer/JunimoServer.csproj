@@ -4,6 +4,7 @@
 		<RootNamespace>JunimoServer</RootNamespace>
 		<Version>1.0.0</Version>
 		<TargetFramework>net5.0</TargetFramework>
+		<EnableHarmony>true</EnableHarmony>
 	</PropertyGroup>
 
 	<ItemGroup>
