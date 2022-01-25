@@ -10,28 +10,27 @@ namespace JunimoServer.Services.CropSaver
     {
         private static IModHelper _helper;
         private static IMonitor _monitor;
+        private static CropSaverDataLoader _cropSaverDataLoader;
 
-        public static void Initialize(IModHelper helper, IMonitor monitor)
+        public static void Initialize(IModHelper helper, IMonitor monitor, CropSaverDataLoader cropSaverDataLoader)
         {
             _helper = helper;
             _monitor = monitor;
+            _cropSaverDataLoader = cropSaverDataLoader;
         }
-        
+
         public static bool KillCrop_Prefix(ref Crop __instance)
         {
-            return false;
-        }
-        
-        
-        public static void Plant_Postfix(ref HoeDirt __instance, ref bool __result, int index, int tileX, int tileY, Farmer who, bool isFertilizer, GameLocation location)
-        {
-            if (__result && __instance.crop != null && location.Name.Equals("Farm"))
-            {
-                _monitor.Log($"{location.Name}, {new Vector2(tileX, tileY)}, {who.UniqueMultiplayerID}, {SDate.Now()}");   
-                // SaverCrop crop = new SaverCrop(location.Name, new Vector2(tileX, tileY), who.UniqueMultiplayerID, SDate.Now());
-                // Loader.ClientAddCrop(crop);
-            }
+            var cropLocation = _helper.Reflection.GetField<Vector2>(__instance, "tilePosition").GetValue();
 
+            var townieCrop = _cropSaverDataLoader.GetSaverCrop("Farm", cropLocation);
+
+            if (townieCrop != null) return false;
+
+            _monitor.Log($"Killed crop at {cropLocation.X}, {cropLocation.Y} wasn't managed by CropSaver!",
+                LogLevel.Warn);
+
+            return true;
         }
     }
 }
