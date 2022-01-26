@@ -13,7 +13,6 @@ namespace JunimoServer.Services.CropSaver
 {
     public class CropSaver
     {
-        private const string CropSaverSaveKey = "JunimoHost.CropSaver";
 
         private readonly CropWatcher _cropWatcher;
         private readonly CropSaverDataLoader _cropSaverDataLoader;
