@@ -27,9 +27,6 @@ namespace JunimoServer.Services.CropSaver
 
             if (townieCrop != null) return false;
 
-            _monitor.Log($"Killed crop at {cropLocation.X}, {cropLocation.Y} wasn't managed by CropSaver!",
-                LogLevel.Warn);
-
             return true;
         }
     }
