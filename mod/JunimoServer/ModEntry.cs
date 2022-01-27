@@ -11,6 +11,8 @@ using System.Collections.Generic;
 using JunimoServer.Controllers;
 using System;
 using HarmonyLib;
+using JunimoServer.Services.AlwaysOnServer;
+using JunimoServer.Services.ChatCommands;
 using JunimoServer.Services.CropSaver;
 
 namespace JunimoServer
@@ -28,7 +30,11 @@ namespace JunimoServer
         public override void Entry(IModHelper helper)
         {
             var harmony = new Harmony(this.ModManifest.UniqueID);
+
+
+            var chatCommands = new ChatCommands(Monitor, harmony);
             var cropSaver = new CropSaver(helper, harmony, Monitor);
+            var alwaysOnServer = new AlwaysOnServer(helper, Monitor);
             this.helper = helper;
             gameLoaderService = new GameLoaderService(helper, Monitor);
             gameCreatorService = new GameCreatorService(gameLoaderService);
@@ -42,6 +48,8 @@ namespace JunimoServer
             HttpServer.ListenAsync(8081, cts.Token, OnHttp);
 
             Monitor.Log("REST API has started: http://localhost:8081", LogLevel.Info);
+            
+     
 
 
 
