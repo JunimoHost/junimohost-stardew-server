@@ -35,14 +35,14 @@ spec:
     spec:
       containers:
         - name: stardew-test
-          image: gcr.io/junimo-host/stardew-base:v0.3.0
+          image: gcr.io/junimo-host/stardew-base:v0.4.1
           ports:
             - containerPort: 24642
             - containerPort: 8081
           resources:
+            requests:
+              cpu: "125m"
+              memory: "400Mi"
             limits:
-              memory: "450Mi"
               cpu: "250m"
-
----
-
+              memory: "512Mi"
