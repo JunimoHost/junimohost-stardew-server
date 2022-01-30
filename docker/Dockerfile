@@ -3,21 +3,21 @@ FROM jlesage/baseimage-gui:debian-10
 ENV APP_NAME="StardewValley"
 
 RUN apt-get update \
-    && apt-get install -y wget unzip tar strace mono-complete xterm \
-    && apt-get install -y gettext-base jq netcat procps
+    && apt-get install -y \
+    wget unzip tar strace mono-complete xterm \
+    gettext-base jq netcat procps
 
 RUN mkdir -p /data/Stardew && \
     mkdir -p /data/nexus && \
-    wget https://eris.cc/Stardew_latest.tar.gz -qO /data/latest.tar.gz && \
+    wget https://storage.googleapis.com/junimo-public/SV155.tar.gz -qO /data/latest.tar.gz && \
     tar xf /data/latest.tar.gz -C /data/Stardew && \
     rm /data/latest.tar.gz 
 
-RUN wget https://github.com/Pathoschild/SMAPI/releases/download/3.12.2/SMAPI-3.12.2-installer.zip -qO /data/nexus.zip && \
+RUN wget https://github.com/Pathoschild/SMAPI/releases/download/3.13.4/SMAPI-3.13.4-installer.zip -qO /data/nexus.zip && \
     unzip /data/nexus.zip -d /data/nexus/ && \
-    /bin/bash -c "echo -e \"2\n/data/Stardew/Stardew\ Valley\n1\n\" | /usr/bin/mono /data/nexus/SMAPI\ 3.12.2\ installer/internal/unix-install.exe" 
+    /bin/bash -c "echo -e \"2\n\n\" | /data/nexus/SMAPI\ 3.13.4\ installer/internal/linux/SMAPI.Installer --install --game-path \"/data/Stardew/Stardew Valley\"" || :
 
-RUN \
-    APP_ICON_URL=https://stardewcommunitywiki.com/mediawiki/images/4/48/Fiddlehead_Fern.png && \
+RUN APP_ICON_URL=https://stardewcommunitywiki.com/mediawiki/images/4/48/Fiddlehead_Fern.png && \
     install_app_icon.sh "$APP_ICON_URL"
 
 COPY scripts/ /opt/
