@@ -4,6 +4,7 @@ using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Menus;
 using System;
+using System.Threading;
 
 namespace JunimoServer.Services.GameCreator
 {
@@ -11,13 +12,15 @@ namespace JunimoServer.Services.GameCreator
 
     class GameCreatorService
     {
-        private GameLoaderService gameLoader;
+        private readonly GameLoaderService _gameLoader;
+        private static readonly Mutex CreateGameMutex = new Mutex();
         public GameCreatorService(GameLoaderService gameLoader) {
-            this.gameLoader = gameLoader;
+            this._gameLoader = gameLoader;
         }
 
         public void CreateNewGame(NewGameConfig config)
         {
+            CreateGameMutex.WaitOne(); //prevent trying to start new game while in the middle of creating a game
 
             Game1.player.team.useSeparateWallets.Value = config.UseSeperateWallets;
             Game1.startingCabins = config.StartingCabins;
@@ -54,7 +57,9 @@ namespace JunimoServer.Services.GameCreator
             Game1.exitActiveMenu();
             Game1.setGameMode(3);
 
-            gameLoader.SetCurrentGameAsSaveToLoad(config.FarmName);
+            _gameLoader.SetCurrentGameAsSaveToLoad(config.FarmName);
+            
+            CreateGameMutex.ReleaseMutex();
         }
 
     }
