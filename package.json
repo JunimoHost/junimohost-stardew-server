@@ -1,0 +1,24 @@
+{
+  "name": "junimo-game",
+  "version": "1.0.0",
+  "description": "",
+  "main": "test-creategame.js",
+  "dependencies": {
+    "axios": "^0.25.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "start": "node test-creategame.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JunimoHost/junimo-game.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/JunimoHost/junimo-game/issues"
+  },
+  "homepage": "https://github.com/JunimoHost/junimo-game#readme"
+}

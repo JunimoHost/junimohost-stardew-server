@@ -8,6 +8,9 @@ services:
       - "DISPLAY_HEIGHT=800"
       - "DISPLAY_WIDTH=1280"
 
+    cpus: 0.25
+    mem_limit: 1Gi
+
     ports:
       # # VNC
       # - 5902:5900
