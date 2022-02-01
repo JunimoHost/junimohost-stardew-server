@@ -90,6 +90,19 @@ namespace JunimoServer
                         res.AsText("No body");
                     }
                 }
+                else if(rq.HttpMethod == "GET" && rq.Url.PathAndQuery.TryMatch("/startup", queryArgs))
+                {
+                    if (titleLaunched)
+                    {
+                        res.StatusCode = 200;
+                        res.AsText("Ready!");
+                    }
+                    else
+                    {
+                        res.StatusCode = 500;
+                        res.AsText("Not Ready!");
+                    }
+                }
                 else
                 {
                     res.StatusCode = 404;
