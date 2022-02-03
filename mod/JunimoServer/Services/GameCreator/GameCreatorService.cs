@@ -8,19 +8,22 @@ using System.Threading;
 
 namespace JunimoServer.Services.GameCreator
 {
-
-
     class GameCreatorService
     {
         private readonly GameLoaderService _gameLoader;
         private static readonly Mutex CreateGameMutex = new Mutex();
-        public GameCreatorService(GameLoaderService gameLoader) {
+
+        public bool GameIsCreating { get; private set; }
+
+        public GameCreatorService(GameLoaderService gameLoader)
+        {
             this._gameLoader = gameLoader;
         }
 
         public void CreateNewGame(NewGameConfig config)
         {
             CreateGameMutex.WaitOne(); //prevent trying to start new game while in the middle of creating a game
+            GameIsCreating = true;
 
             Game1.player.team.useSeparateWallets.Value = config.UseSeperateWallets;
             Game1.startingCabins = config.StartingCabins;
@@ -58,9 +61,9 @@ namespace JunimoServer.Services.GameCreator
             Game1.setGameMode(3);
 
             _gameLoader.SetCurrentGameAsSaveToLoad(config.FarmName);
-            
+
+            GameIsCreating = false;
             CreateGameMutex.ReleaseMutex();
         }
-
     }
 }

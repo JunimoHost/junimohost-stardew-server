@@ -17,10 +17,8 @@ using JunimoServer.Services.CropSaver;
 
 namespace JunimoServer
 {
-
     internal class ModEntry : Mod
     {
-
         private GameCreatorService gameCreatorService;
         private GameCreatorController gameCreatorController;
         private GameLoaderService gameLoaderService;
@@ -48,9 +46,6 @@ namespace JunimoServer
             HttpServer.ListenAsync(8081, cts.Token, OnHttp);
 
             Monitor.Log("REST API has started: http://localhost:8081", LogLevel.Info);
-            
-     
-
 
 
             //GRPCGameManagerService gameManagerService = new GRPCGameManagerService(gameCreator, gameLoader, Monitor);
@@ -66,8 +61,6 @@ namespace JunimoServer
             //this.Monitor.Log($"Starting Server on 50051...", LogLevel.Debug);
 
             //server.Start();
-
-
         }
 
         private async Task OnHttp(HttpListenerRequest rq, HttpListenerResponse res)
@@ -78,7 +71,6 @@ namespace JunimoServer
 
                 if (rq.HttpMethod == "POST" && rq.Url.PathAndQuery.TryMatch("/game", queryArgs))
                 {
-
                     string body = rq.ParseBody();
                     if (body != null)
                     {
@@ -91,20 +83,21 @@ namespace JunimoServer
                         res.AsText("No body");
                     }
                 }
+
                 if (rq.HttpMethod == "GET" && rq.Url.PathAndQuery.TryMatch("/game/status", queryArgs))
                 {
-                    if (Game1.getFarm() != null)
-                    {
-                        res.StatusCode = 200;
-                        res.AsText("Ready!");
-                    }
-                    else
+                    if (gameCreatorService.GameIsCreating)
                     {
                         res.StatusCode = 202;
                         res.AsText("Not Ready!");
                     }
+                    else
+                    {
+                        res.StatusCode = 200;
+                        res.AsText("Ready!");
+                    }
                 }
-                else if(rq.HttpMethod == "GET" && rq.Url.PathAndQuery.TryMatch("/startup", queryArgs))
+                else if (rq.HttpMethod == "GET" && rq.Url.PathAndQuery.TryMatch("/startup", queryArgs))
                 {
                     if (titleLaunched)
                     {
@@ -128,8 +121,6 @@ namespace JunimoServer
                 res.StatusCode = 500;
                 res.AsText(ex.Message);
             }
-
-
         }
 
         private void OnButtonPressed(object sender, StardewModdingAPI.Events.ButtonPressedEventArgs e)
@@ -157,5 +148,4 @@ namespace JunimoServer
             }
         }
     }
-
 }
