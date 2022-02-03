@@ -82,12 +82,26 @@ namespace JunimoServer
                     string body = rq.ParseBody();
                     if (body != null)
                     {
+                        res.StatusCode = 200;
+                        res.AsText("Creating Game!");
                         gameCreatorController.CreateGame(body);
-                        res.AsText("Success!");
                     }
                     else
                     {
                         res.AsText("No body");
+                    }
+                }
+                if (rq.HttpMethod == "GET" && rq.Url.PathAndQuery.TryMatch("/game/status", queryArgs))
+                {
+                    if (Game1.getFarm() != null)
+                    {
+                        res.StatusCode = 200;
+                        res.AsText("Ready!");
+                    }
+                    else
+                    {
+                        res.StatusCode = 202;
+                        res.AsText("Not Ready!");
                     }
                 }
                 else if(rq.HttpMethod == "GET" && rq.Url.PathAndQuery.TryMatch("/startup", queryArgs))
