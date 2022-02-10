@@ -14,6 +14,8 @@ using HarmonyLib;
 using JunimoServer.Services.AlwaysOnServer;
 using JunimoServer.Services.ChatCommands;
 using JunimoServer.Services.CropSaver;
+using JunimoServer.Services.ServerOptimizer;
+using Microsoft.Xna.Framework;
 
 namespace JunimoServer
 {
@@ -33,6 +35,7 @@ namespace JunimoServer
             var chatCommands = new ChatCommands(Monitor, harmony);
             var cropSaver = new CropSaver(helper, harmony, Monitor);
             var alwaysOnServer = new AlwaysOnServer(helper, Monitor);
+            var optimizer = new ServerOptimizer(harmony, Monitor);
             this.helper = helper;
             gameLoaderService = new GameLoaderService(helper, Monitor);
             gameCreatorService = new GameCreatorService(gameLoaderService);
@@ -146,6 +149,8 @@ namespace JunimoServer
             {
                 gameLoaderService.LoadSave();
             }
+
+            ServerOptimizerOverrides.DisableDrawing();
         }
     }
 }
