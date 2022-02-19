@@ -30,15 +30,35 @@ namespace JunimoServer.Services.ChatCommands
         {
             _monitor.Log($"{obj.Message}");
 
-            foreach (var command in _registeredCommands.Where(command => command.Name.Equals(obj.Message)))
+            var msg = obj.Message;
+            if (string.IsNullOrEmpty(msg) || msg[0] != '!' || msg.Length < 2)
             {
-                command.Action(obj);
+                return;
+            }
+
+            var commandStringWithArgs = msg[1..];
+            var commandParts = commandStringWithArgs.Split(" ");
+            var commandName = commandParts[0];
+            var commandArgs = Array.Empty<string>();
+            if (commandParts.Length > 1)
+            {
+                commandArgs = commandParts[1..];
+            }
+
+            foreach (var command in _registeredCommands.Where(command => command.Name.Equals(commandName)))
+            {
+                command.Action(commandArgs, obj);
             }
         }
 
-        public void RegisterCommand(string name, string description, Action<ReceivedMessage> action)
+        public void RegisterCommand(string name, string description, Action<string[], ReceivedMessage> action)
         {
             _registeredCommands.Add(new ChatCommand(name, description, action));
+        }
+
+        public void RegisterCommand(ChatCommand command)
+        {
+            _registeredCommands.Add(command);
         }
     }
 }

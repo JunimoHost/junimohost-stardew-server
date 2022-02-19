@@ -102,19 +102,18 @@ namespace JunimoServer.Services.AlwaysOnServer
 
             helper.ConsoleCommands.Add("server", "Toggles headless 'auto mode' on/off", this.ToggleAutoMode);
 
-            helper.Events.GameLoop.SaveLoaded += this.OnSaveLoaded;
-            helper.Events.GameLoop.Saving += this.OnSaving; // Shipping Menu handler
-            helper.Events.GameLoop.OneSecondUpdateTicked += this.OnOneSecondUpdateTicked; //game tick event handler
-            helper.Events.GameLoop.TimeChanged += this.OnTimeChanged; // Time of day change handler
+            helper.Events.GameLoop.SaveLoaded += OnSaveLoaded;
+            helper.Events.GameLoop.Saving += OnSaving; // Shipping Menu handler
+            helper.Events.GameLoop.OneSecondUpdateTicked += OnOneSecondUpdateTicked; //game tick event handler
+            helper.Events.GameLoop.TimeChanged += OnTimeChanged; // Time of day change handler
             helper.Events.GameLoop.UpdateTicked +=
-                this.OnUpdateTicked; //handles various events that should occur as soon as they are available
-            helper.Events.Input.ButtonPressed += this.OnButtonPressed;
-            helper.Events.Display.Rendered += this.OnRendered;
+                OnUpdateTicked; //handles various events that should occur as soon as they are available
+            helper.Events.Input.ButtonPressed += OnButtonPressed;
+            helper.Events.Display.Rendered += OnRendered;
             helper.Events.Specialized.UnvalidatedUpdateTicked +=
                 OnUnvalidatedUpdateTick; //used bc only thing that gets throug save window
-            
-            _chatCommandApi.RegisterCommand("event", "Tries to start the current festival's event.", StartEvent);
 
+            _chatCommandApi.RegisterCommand("event", "Tries to start the current festival's event.", StartEvent);
         }
 
 
@@ -130,7 +129,7 @@ namespace JunimoServer.Services.AlwaysOnServer
         }
 
         //draw textbox rules
-        public static void DrawTextBox(int x, int y, SpriteFont font, string message, int align = 0,
+        private static void DrawTextBox(int x, int y, SpriteFont font, string message, int align = 0,
             float colorIntensity = 1f)
         {
             SpriteBatch spriteBatch = Game1.spriteBatch;
@@ -628,12 +627,9 @@ namespace JunimoServer.Services.AlwaysOnServer
             {
                 Game1.paused = true;
             }
-
-            
-
         }
 
-        private void StartEvent(ReceivedMessage msg)
+        private void StartEvent(string[] args, ReceivedMessage msg)
         {
             var currentDate = SDate.Now();
 
