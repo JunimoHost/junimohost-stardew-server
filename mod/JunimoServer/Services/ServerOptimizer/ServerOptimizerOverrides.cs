@@ -7,7 +7,7 @@ namespace JunimoServer.Services.ServerOptimizer
     public class ServerOptimizerOverrides
     {
         private static IMonitor _monitor;
-        private static bool _disabled = true;
+        private static bool _shouldDrawFrame = true;
 
         public static void Initialize(IMonitor monitor)
         {
@@ -17,17 +17,17 @@ namespace JunimoServer.Services.ServerOptimizer
         public static bool Draw_Prefix(GameRunner __instance)
 
         {
-            if (!_disabled)
+            if (!_shouldDrawFrame)
             {
                 __instance.SuppressDraw();
             }
 
-            return _disabled;
+            return _shouldDrawFrame;
         }
 
         public static void DisableDrawing()
         {
-            _disabled = false;
+            _shouldDrawFrame = false;
         }
     }
 }

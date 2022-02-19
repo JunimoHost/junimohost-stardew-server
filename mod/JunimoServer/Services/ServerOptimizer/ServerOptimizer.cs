@@ -16,5 +16,10 @@ namespace JunimoServer.Services.ServerOptimizer
             );
 
         }
+
+        public void DisableDrawing()
+        {
+            ServerOptimizerOverrides.DisableDrawing();
+        }
     }
 }

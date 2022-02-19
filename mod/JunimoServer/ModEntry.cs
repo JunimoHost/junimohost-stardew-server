@@ -1,31 +1,31 @@
-﻿using JunimoServer.Services.GameCreator;
-using JunimoServer.Services.GameLoader;
-using StardewModdingAPI;
-using StardewValley;
-using StardewValley.Menus;
-using SimpleHttp;
-using System.Threading;
-using System.Net;
-using System.Threading.Tasks;
+﻿using System;
 using System.Collections.Generic;
-using JunimoServer.Controllers;
-using System;
+using System.Net;
+using System.Threading;
+using System.Threading.Tasks;
 using HarmonyLib;
+using JunimoServer.Controllers;
 using JunimoServer.Services.AlwaysOnServer;
 using JunimoServer.Services.ChatCommands;
 using JunimoServer.Services.CropSaver;
+using JunimoServer.Services.GameCreator;
+using JunimoServer.Services.GameLoader;
 using JunimoServer.Services.ServerOptimizer;
-using Microsoft.Xna.Framework;
+using SimpleHttp;
+using StardewModdingAPI;
+using StardewModdingAPI.Events;
+using StardewValley;
+using StardewValley.Menus;
 
 namespace JunimoServer
 {
     internal class ModEntry : Mod
     {
-        private GameCreatorService gameCreatorService;
-        private GameCreatorController gameCreatorController;
-        private GameLoaderService gameLoaderService;
-        private IModHelper helper;
-        private bool titleLaunched = false;
+        private GameCreatorService _gameCreatorService;
+        private GameCreatorController _gameCreatorController;
+        private GameLoaderService _gameLoaderService;
+        private ServerOptimizer _serverOptimizer;
+        private bool _titleLaunched = false;
 
         public override void Entry(IModHelper helper)
         {
@@ -34,12 +34,11 @@ namespace JunimoServer
 
             var chatCommands = new ChatCommands(Monitor, harmony);
             var cropSaver = new CropSaver(helper, harmony, Monitor);
-            var alwaysOnServer = new AlwaysOnServer(helper, Monitor);
-            var optimizer = new ServerOptimizer(harmony, Monitor);
-            this.helper = helper;
-            gameLoaderService = new GameLoaderService(helper, Monitor);
-            gameCreatorService = new GameCreatorService(gameLoaderService);
-            gameCreatorController = new GameCreatorController(Monitor, gameCreatorService);
+            var alwaysOnServer = new AlwaysOnServer(helper, Monitor, chatCommands);
+            _serverOptimizer = new ServerOptimizer(harmony, Monitor);
+            _gameLoaderService = new GameLoaderService(helper, Monitor);
+            _gameCreatorService = new GameCreatorService(_gameLoaderService);
+            _gameCreatorController = new GameCreatorController(Monitor, _gameCreatorService);
             helper.Events.Display.RenderedActiveMenu += OnRenderedActiveMenu;
             helper.Events.Input.ButtonPressed += OnButtonPressed;
 
@@ -79,7 +78,7 @@ namespace JunimoServer
                     {
                         res.StatusCode = 200;
                         res.AsText("Creating Game!");
-                        gameCreatorController.CreateGame(body);
+                        _gameCreatorController.CreateGame(body);
                     }
                     else
                     {
@@ -89,7 +88,7 @@ namespace JunimoServer
 
                 if (rq.HttpMethod == "GET" && rq.Url.PathAndQuery.TryMatch("/game/status", queryArgs))
                 {
-                    if (gameCreatorService.GameIsCreating)
+                    if (_gameCreatorService.GameIsCreating)
                     {
                         res.StatusCode = 202;
                         res.AsText("Not Ready!");
@@ -102,7 +101,7 @@ namespace JunimoServer
                 }
                 else if (rq.HttpMethod == "GET" && rq.Url.PathAndQuery.TryMatch("/startup", queryArgs))
                 {
-                    if (titleLaunched)
+                    if (_titleLaunched)
                     {
                         res.StatusCode = 200;
                         res.AsText("Ready!");
@@ -126,7 +125,7 @@ namespace JunimoServer
             }
         }
 
-        private void OnButtonPressed(object sender, StardewModdingAPI.Events.ButtonPressedEventArgs e)
+        private void OnButtonPressed(object sender, ButtonPressedEventArgs e)
         {
             if (e.Button == SButton.Q)
             {
@@ -134,23 +133,23 @@ namespace JunimoServer
             }
         }
 
-        private void OnRenderedActiveMenu(object sender, StardewModdingAPI.Events.RenderedActiveMenuEventArgs e)
+        private void OnRenderedActiveMenu(object sender, RenderedActiveMenuEventArgs e)
         {
-            if (Game1.activeClickableMenu is TitleMenu && !titleLaunched)
+            if (Game1.activeClickableMenu is TitleMenu && !_titleLaunched)
             {
                 OnTitleMenuLaunched();
-                titleLaunched = true;
+                _titleLaunched = true;
             }
         }
 
         private void OnTitleMenuLaunched()
         {
-            if (gameLoaderService.HasLoadableSave())
+            if (_gameLoaderService.HasLoadableSave())
             {
-                gameLoaderService.LoadSave();
+                _gameLoaderService.LoadSave();
             }
 
-            ServerOptimizerOverrides.DisableDrawing();
+            // _serverOptimizer.DisableDrawing();
         }
     }
 }
