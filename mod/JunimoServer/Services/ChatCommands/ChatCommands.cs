@@ -2,7 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using HarmonyLib;
+using JunimoServer.Util;
 using StardewModdingAPI;
 using StardewValley.Menus;
 
@@ -11,18 +13,36 @@ namespace JunimoServer.Services.ChatCommands
     public class ChatCommands : IChatCommandApi
     {
         private readonly IMonitor _monitor;
+        private readonly IModHelper _helper;
 
         private readonly List<ChatCommand> _registeredCommands = new List<ChatCommand>();
 
-        public ChatCommands(IMonitor monitor, Harmony harmony)
+        public ChatCommands(IMonitor monitor, Harmony harmony, IModHelper helper)
         {
             _monitor = monitor;
+            _helper = helper;
+
             ChatWatcher.Initialize(OnChatMessage);
 
             harmony.Patch(
                 original: AccessTools.Method(typeof(ChatBox), nameof(ChatBox.receiveChatMessage)),
                 postfix: new HarmonyMethod(typeof(ChatWatcher), nameof(ChatWatcher.receiveChatMessage_Postfix))
             );
+
+            RegisterCommand(new ChatCommand("help", "Displays available commands.", HelpCommand));
+        }
+
+        private void HelpCommand(string[] args, ReceivedMessage msg)
+        {
+            var commandList = new StringBuilder();
+            commandList.Append("Commands:\n");
+
+            foreach (var command in _registeredCommands)
+            {
+                commandList.Append($"!{command.Name}: {command.Description}\n");
+            }
+
+            _helper.SendPrivateMessage(msg.SourceFarmer, commandList.ToString());
         }
 
 

@@ -12,21 +12,21 @@ namespace JunimoServer.Services.GameLoader
 {
     class GameLoaderService
     {
-        private static readonly string SAVE_KEY = "JunimoHost.GameLoader";
+        private const string SaveKey = "JunimoHost.GameLoader";
 
-        private readonly IModHelper helper;
-        private readonly IMonitor monitor;
-        private readonly GameLoaderSaveData saveData;
+        private readonly IModHelper _helper;
+        private readonly IMonitor _monitor;
+        private readonly GameLoaderSaveData _saveData;
         public GameLoaderService(IModHelper helper, IMonitor monitor)
         {
-            this.helper = helper;
-            this.monitor = monitor;
-            saveData = helper.Data.ReadGlobalData<GameLoaderSaveData>(SAVE_KEY) ?? new GameLoaderSaveData();
+            _helper = helper;
+            _monitor = monitor;
+            _saveData = helper.Data.ReadGlobalData<GameLoaderSaveData>(SaveKey) ?? new GameLoaderSaveData();
         }
 
         public bool HasLoadableSave()
         {
-            string saveName = saveData.SaveNameToLoad;
+            string saveName = _saveData.SaveNameToLoad;
 
             if (saveName == null)
             {
@@ -42,12 +42,12 @@ namespace JunimoServer.Services.GameLoader
 
         public bool LoadSave()
         {
-            string saveName = saveData.SaveNameToLoad;
+            string saveName = _saveData.SaveNameToLoad;
             string savePath = GetSavePath(saveName);
             bool saveExists = Directory.Exists(savePath);
             if (!saveExists)
             {
-                monitor.Log($"{savePath} does not exist. Aborting load.", LogLevel.Warn);
+                _monitor.Log($"{savePath} does not exist. Aborting load.", LogLevel.Warn);
                 return false;
             }
 
@@ -55,7 +55,7 @@ namespace JunimoServer.Services.GameLoader
 
             try
             {
-                monitor.Log($"Loading Save: {saveName}", LogLevel.Info);
+                _monitor.Log($"Loading Save: {saveName}", LogLevel.Info);
                 SaveGame.Load(saveName);
                 if (Game1.activeClickableMenu is IClickableMenu menu && menu != null)
                 {
@@ -64,7 +64,7 @@ namespace JunimoServer.Services.GameLoader
             }
             catch (Exception ex)
             {
-                monitor.Log($"Load Failed: {ex.Message} ", LogLevel.Error);
+                _monitor.Log($"Load Failed: {ex.Message} ", LogLevel.Error);
                 return false;
             }
 
@@ -74,9 +74,9 @@ namespace JunimoServer.Services.GameLoader
 
         public void SetSaveNameToLoad(string saveName)
         {
-            saveData.SaveNameToLoad = saveName;
-            helper.Data.WriteGlobalData(SAVE_KEY, saveData);
-            monitor.Log($"Save set to load: {saveName}", LogLevel.Info);
+            _saveData.SaveNameToLoad = saveName;
+            _helper.Data.WriteGlobalData(SaveKey, _saveData);
+            _monitor.Log($"Save set to load: {saveName}", LogLevel.Info);
         }
 
         public void SetCurrentGameAsSaveToLoad(string FarmName)

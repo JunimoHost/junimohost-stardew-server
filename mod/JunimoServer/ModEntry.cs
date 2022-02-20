@@ -7,9 +7,11 @@ using HarmonyLib;
 using JunimoServer.Controllers;
 using JunimoServer.Services.AlwaysOnServer;
 using JunimoServer.Services.ChatCommands;
+using JunimoServer.Services.Commands;
 using JunimoServer.Services.CropSaver;
 using JunimoServer.Services.GameCreator;
 using JunimoServer.Services.GameLoader;
+using JunimoServer.Services.PersistentOptions;
 using JunimoServer.Services.ServerOptimizer;
 using SimpleHttp;
 using StardewModdingAPI;
@@ -31,14 +33,17 @@ namespace JunimoServer
         {
             var harmony = new Harmony(this.ModManifest.UniqueID);
 
-
-            var chatCommands = new ChatCommands(Monitor, harmony);
+            var options = new PersistentOptions(helper);
+            var chatCommands = new ChatCommands(Monitor, harmony, helper);
             var cropSaver = new CropSaver(helper, harmony, Monitor);
             var alwaysOnServer = new AlwaysOnServer(helper, Monitor, chatCommands);
             _serverOptimizer = new ServerOptimizer(harmony, Monitor);
             _gameLoaderService = new GameLoaderService(helper, Monitor);
-            _gameCreatorService = new GameCreatorService(_gameLoaderService);
+            _gameCreatorService = new GameCreatorService(_gameLoaderService, options);
             _gameCreatorController = new GameCreatorController(Monitor, _gameCreatorService);
+            
+            CabinCommand.Register(helper, chatCommands, options, Monitor);
+            
             helper.Events.Display.RenderedActiveMenu += OnRenderedActiveMenu;
             helper.Events.Input.ButtonPressed += OnButtonPressed;
 

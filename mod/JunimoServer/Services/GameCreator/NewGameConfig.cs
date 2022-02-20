@@ -5,10 +5,12 @@ namespace JunimoServer.Services.GameCreator
     public class NewGameConfig
     {
         public int WhichFarm { get; set; } = 0;
-        public bool UseSeperateWallets { get; set; } = false;
+        public bool UseSeparateWallets { get; set; } = false;
         public int StartingCabins { get; set; } = 1;
         public bool CatPerson { get; set; } = false;
         public string FarmName { get; set; } = "Junimo";
+
+        public int MaxPlayers { get; set; } = 4;
 
         //public static NewGameConfig FromCreateGameRequest(CreateGameRequest req) {
         //    return new NewGameConfig { 

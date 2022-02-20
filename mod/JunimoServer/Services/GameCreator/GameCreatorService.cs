@@ -5,6 +5,7 @@ using StardewValley;
 using StardewValley.Menus;
 using System;
 using System.Threading;
+using JunimoServer.Services.PersistentOptions;
 
 namespace JunimoServer.Services.GameCreator
 {
@@ -12,12 +13,14 @@ namespace JunimoServer.Services.GameCreator
     {
         private readonly GameLoaderService _gameLoader;
         private static readonly Mutex CreateGameMutex = new Mutex();
+        private readonly PersistentOptions.PersistentOptions _options;
 
         public bool GameIsCreating { get; private set; }
 
-        public GameCreatorService(GameLoaderService gameLoader)
+        public GameCreatorService(GameLoaderService gameLoader, PersistentOptions.PersistentOptions options)
         {
-            this._gameLoader = gameLoader;
+            _options = options;
+            _gameLoader = gameLoader;
         }
 
         public void CreateNewGame(NewGameConfig config)
@@ -25,11 +28,17 @@ namespace JunimoServer.Services.GameCreator
             CreateGameMutex.WaitOne(); //prevent trying to start new game while in the middle of creating a game
             GameIsCreating = true;
 
-            Game1.player.team.useSeparateWallets.Value = config.UseSeperateWallets;
+            _options.SetPersistentOptions(new PersistentOptionsSaveData
+            {
+                MaxPlayers = config.MaxPlayers
+            });
+
+
+            Game1.player.team.useSeparateWallets.Value = config.UseSeparateWallets;
             Game1.startingCabins = config.StartingCabins;
 
             Game1.whichFarm = config.WhichFarm;
-            bool isWildernessFarm = config.WhichFarm == 4;
+            var isWildernessFarm = config.WhichFarm == 4;
             Game1.spawnMonstersAtNight = isWildernessFarm;
 
             Game1.player.catPerson = config.CatPerson;

@@ -967,7 +967,7 @@ namespace JunimoServer.Services.AlwaysOnServer
                     }
 
                     //Hide at start of day
-                    if (currentTime == 600)
+                    if (currentTime == 610)
                     {
                         HideFarmer();
                     }
@@ -976,7 +976,7 @@ namespace JunimoServer.Services.AlwaysOnServer
                     if (currentTime == 900 && !Game1.player.eventsSeen.Contains(739330))
                     {
                         Game1.player.increaseBackpackSize(1);
-                        Game1.warpFarmer("Beach", 30, 30, 1);
+                        Game1.warpFarmer("Beach", 50, 50, 1);
                     }
                 }
             }
