@@ -681,8 +681,6 @@ namespace JunimoServer.Services.AlwaysOnServer
         {
             HandleAutoSleep();
             HandleAutoLeaveFestival();
-            // HandleAutoGoToFestival();
-
 
             // lock player chests
             if (Config.LockPlayerChests)
@@ -768,28 +766,6 @@ namespace JunimoServer.Services.AlwaysOnServer
             {
                 LeaveFestival();
             }
-        }
-
-        private void HandleAutoGoToFestival()
-        {
-            var numPlayers = Game1.otherFarmers.Count;
-            if (numPlayers == 0) return;
-        
-            var numReady = Game1.player.team.GetNumberReady("festivalStart");
-            var numReq = Game1.player.team.GetNumberRequired("festivalStart");
-        
-            if (numReq - numReady != 1)
-            {
-                return;
-            }
-            
-            Game1.player.team.SetLocalReady("festivalStart", true);
-            Game1.activeClickableMenu = new ReadyCheckDialog("festivalStart", true, who =>
-            {
-                Game1.exitActiveMenu();
-            });
-        
-           
         }
 
         private void LockPlayersChests()
