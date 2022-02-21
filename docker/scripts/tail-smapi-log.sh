@@ -9,4 +9,4 @@ while [ ! -f "/config/xdg/config/StardewValley/ErrorLogs/SMAPI-latest.txt" ]; do
 done
 
 echo "-- SMAPI Log:  Tailing"
-tail -f /config/xdg/config/StardewValley/ErrorLogs/SMAPI-latest.txt
+tail -F /config/xdg/config/StardewValley/ErrorLogs/SMAPI-latest.txt
