@@ -91,7 +91,7 @@ namespace JunimoServer
             Helper.SendPublicMessage("Welcome to your new server! Thank you for supporting us.");
             Helper.SendPublicMessage("");
             Helper.SendPublicMessage(
-                "To build cabins quickly for your friends type !cabin when next to the area you'd like it built.");
+                "Type !cabin to build a cabin to the right of your player. This will allow friends to join quickly.");
             Helper.SendPublicMessage("Type !help for more information on commands.");
             _sentWelcomeMessage = true;
         }

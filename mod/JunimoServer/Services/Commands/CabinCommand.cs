@@ -81,7 +81,7 @@ namespace JunimoServer.Services.Commands
                     }
                     else
                     {
-                        helper.SendPublicMessage("Build Failed: Area not clear.");
+                        helper.SendPublicMessage("Build Failed: Invalid Area.");
                     }
 
                 }
