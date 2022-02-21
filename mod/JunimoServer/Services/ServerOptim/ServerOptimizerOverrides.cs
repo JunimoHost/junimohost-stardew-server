@@ -1,8 +1,7 @@
-﻿using Microsoft.Xna.Framework;
-using StardewModdingAPI;
+﻿using StardewModdingAPI;
 using StardewValley;
 
-namespace JunimoServer.Services.ServerOptimizer
+namespace JunimoServer.Services.ServerOptim
 {
     public class ServerOptimizerOverrides
     {
@@ -28,6 +27,11 @@ namespace JunimoServer.Services.ServerOptimizer
         public static void DisableDrawing()
         {
             _shouldDrawFrame = false;
+        }
+
+        public static void EnableDrawing()
+        {
+            _shouldDrawFrame = true;
         }
     }
 }

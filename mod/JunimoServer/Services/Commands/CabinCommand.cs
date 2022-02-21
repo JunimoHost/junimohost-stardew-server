@@ -15,7 +15,7 @@ namespace JunimoServer.Services.Commands
     public static class CabinCommand
     {
         public static void Register(IModHelper helper, IChatCommandApi chatCommandApi,
-            PersistentOptions.PersistentOptions options, IMonitor monitor)
+            PersistentOption.PersistentOptions options, IMonitor monitor)
         {
             chatCommandApi.RegisterCommand("cabin",
                 "!cabin plank|log|stone places a cabin right of player's location.\nThis will clear basic debris to make space.",

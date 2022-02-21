@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.Collections.Generic;
 using System.Linq;
-using HarmonyLib;
 using JunimoServer.Services.ChatCommands;
+using JunimoServer.Services.ServerOptim;
+using JunimoServer.Util;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
@@ -23,8 +22,6 @@ namespace JunimoServer.Services.AlwaysOnServer
     {
         /// <summary>The mod configuration from the player.</summary>
         private AlwaysOnConfig Config;
-
-        private int gameClockTicks; //stores in game clock change 
 
         /// <summary>Whether the main player is currently being automated.</summary>
         private bool IsAutomating;
@@ -90,13 +87,18 @@ namespace JunimoServer.Services.AlwaysOnServer
         private readonly IModHelper _helper;
         private readonly IChatCommandApi _chatCommandApi;
         private readonly IMonitor _monitor;
+        private readonly ServerOptimizer _optimizer;
+        private readonly bool _disableRendering;
 
 
-        public AlwaysOnServer(IModHelper helper, IMonitor monitor, IChatCommandApi chatCommandApi)
+        public AlwaysOnServer(IModHelper helper, IMonitor monitor, IChatCommandApi chatCommandApi,
+            ServerOptimizer optimizer, bool disableRendering)
         {
             _helper = helper;
             _monitor = monitor;
             _chatCommandApi = chatCommandApi;
+            _optimizer = optimizer;
+            _disableRendering = disableRendering;
             Config = helper.ReadConfig<AlwaysOnConfig>();
 
 
@@ -112,8 +114,17 @@ namespace JunimoServer.Services.AlwaysOnServer
             helper.Events.Display.Rendered += OnRendered;
             helper.Events.Specialized.UnvalidatedUpdateTicked +=
                 OnUnvalidatedUpdateTick; //used bc only thing that gets throug save window
+            helper.Events.GameLoop.DayStarted += OnDayStarted;
 
             _chatCommandApi.RegisterCommand("event", "Tries to start the current festival's event.", StartEvent);
+        }
+
+        private void OnDayStarted(object sender, DayStartedEventArgs e)
+        {
+            if (_disableRendering)
+            {
+                _optimizer.DisableDrawing();
+            }
         }
 
 
@@ -167,9 +178,7 @@ namespace JunimoServer.Services.AlwaysOnServer
             if (Game1.options.enableServer && IsAutomating)
             {
                 DrawTextBox(5, 100, Game1.dialogueFont, "Auto Mode On");
-                DrawTextBox(5, 180, Game1.dialogueFont, $"Press {this.Config.ServerHotKey} On/Off");
-                float profitMargin = this.Config.ProfitMargin;
-                DrawTextBox(5, 260, Game1.dialogueFont, $"Profit Margin: {profitMargin}%");
+                DrawTextBox(5, 180, Game1.dialogueFont, $"Press {Config.ServerHotKey} On/Off");
                 DrawTextBox(5, 340, Game1.dialogueFont, $"{Game1.server.connectionsCount} Players Online");
             }
         }
@@ -219,7 +228,6 @@ namespace JunimoServer.Services.AlwaysOnServer
             Game1.displayHUD = true;
             Game1.addHUDMessage(new HUDMessage("Auto Mode On!", ""));
 
-            Game1.options.pauseWhenOutOfFocus = false;
 
             HideFarmer();
 
@@ -273,14 +281,14 @@ namespace JunimoServer.Services.AlwaysOnServer
                     {
                         Game1.netWorldState.Value.IsPaused = true;
                         clientPaused = true;
-                        this.SendChatMessage("Game Paused");
+                        _helper.SendPublicMessage("Game Paused");
                     }
 
                     if (lastFragment != null && lastFragment == "!unpause")
                     {
                         Game1.netWorldState.Value.IsPaused = false;
                         clientPaused = false;
-                        this.SendChatMessage("Game Resumed");
+                        _helper.SendPublicMessage("Game Resumed");
                     }
                 }
             }
@@ -318,7 +326,7 @@ namespace JunimoServer.Services.AlwaysOnServer
                     float chatEgg = this.Config.EggHuntCountDownConfig / 60f;
                     if (eggHuntCountDown == 1)
                     {
-                        this.SendChatMessage($"The Egg Hunt will begin in {chatEgg:0.#} minutes.");
+                        _helper.SendPublicMessage($"The Egg Hunt will begin in {chatEgg:0.#} minutes.");
                     }
 
                     if (eggHuntCountDown == this.Config.EggHuntCountDownConfig + 1)
@@ -345,7 +353,7 @@ namespace JunimoServer.Services.AlwaysOnServer
                 }
 
                 // flower dance event
-                if (Game1.CurrentEvent != null && Game1.CurrentEvent.isFestival)
+                if (flowerDanceAvailable && Game1.CurrentEvent != null && Game1.CurrentEvent.isFestival)
                 {
                     if (eventCommandUsed)
                     {
@@ -358,7 +366,7 @@ namespace JunimoServer.Services.AlwaysOnServer
                     float chatFlower = this.Config.FlowerDanceCountDownConfig / 60f;
                     if (flowerDanceCountDown == 1)
                     {
-                        this.SendChatMessage($"The Flower Dance will begin in {chatFlower:0.#} minutes.");
+                        _helper.SendPublicMessage($"The Flower Dance will begin in {chatFlower:0.#} minutes.");
                     }
 
                     if (flowerDanceCountDown == this.Config.FlowerDanceCountDownConfig + 1)
@@ -401,7 +409,7 @@ namespace JunimoServer.Services.AlwaysOnServer
                     float chatSoup = this.Config.LuauSoupCountDownConfig / 60f;
                     if (luauSoupCountDown == 1)
                     {
-                        this.SendChatMessage($"The Soup Tasting will begin in {chatSoup:0.#} minutes.");
+                        _helper.SendPublicMessage($"The Soup Tasting will begin in {chatSoup:0.#} minutes.");
 
                         //add iridium starfruit to soup
                         var item = new SObject(268, 1, false, -1, 3);
@@ -445,7 +453,7 @@ namespace JunimoServer.Services.AlwaysOnServer
                     float chatJelly = this.Config.JellyDanceCountDownConfig / 60f;
                     if (jellyDanceCountDown == 1)
                     {
-                        this.SendChatMessage(
+                        _helper.SendPublicMessage(
                             $"The Dance of the Moonlight Jellies will begin in {chatJelly:0.#} minutes.");
                     }
 
@@ -486,8 +494,8 @@ namespace JunimoServer.Services.AlwaysOnServer
                     //festival timeout code
                     if (festivalTicksForReset == this.Config.FairTimeOut - 120)
                     {
-                        this.SendChatMessage("2 minutes to the exit or");
-                        this.SendChatMessage("everyone will be kicked.");
+                        _helper.SendPublicMessage("2 minutes to the exit or");
+                        _helper.SendPublicMessage("everyone will be kicked.");
                     }
 
                     if (festivalTicksForReset >= this.Config.FairTimeOut)
@@ -499,7 +507,7 @@ namespace JunimoServer.Services.AlwaysOnServer
                     float chatGrange = this.Config.GrangeDisplayCountDownConfig / 60f;
                     if (grangeDisplayCountDown == 1)
                     {
-                        this.SendChatMessage($"The Grange Judging will begin in {chatGrange:0.#} minutes.");
+                        _helper.SendPublicMessage($"The Grange Judging will begin in {chatGrange:0.#} minutes.");
                     }
 
                     if (grangeDisplayCountDown == this.Config.GrangeDisplayCountDownConfig + 1)
@@ -520,8 +528,8 @@ namespace JunimoServer.Services.AlwaysOnServer
                     //festival timeout code
                     if (festivalTicksForReset == this.Config.SpiritsEveTimeOut - 120)
                     {
-                        this.SendChatMessage("2 minutes to the exit or");
-                        this.SendChatMessage("everyone will be kicked.");
+                        _helper.SendPublicMessage("2 minutes to the exit or");
+                        _helper.SendPublicMessage("everyone will be kicked.");
                     }
 
                     if (festivalTicksForReset >= this.Config.SpiritsEveTimeOut)
@@ -548,7 +556,7 @@ namespace JunimoServer.Services.AlwaysOnServer
                     float chatIceFish = this.Config.IceFishingCountDownConfig / 60f;
                     if (iceFishingCountDown == 1)
                     {
-                        this.SendChatMessage($"The Ice Fishing Contest will begin in {chatIceFish:0.#} minutes.");
+                        _helper.SendPublicMessage($"The Ice Fishing Contest will begin in {chatIceFish:0.#} minutes.");
                     }
 
                     if (iceFishingCountDown == this.Config.IceFishingCountDownConfig + 1)
@@ -582,8 +590,8 @@ namespace JunimoServer.Services.AlwaysOnServer
                     //festival timeout code
                     if (festivalTicksForReset == this.Config.WinterStarTimeOut - 120)
                     {
-                        this.SendChatMessage("2 minutes to the exit or");
-                        this.SendChatMessage("everyone will be kicked.");
+                        _helper.SendPublicMessage("2 minutes to the exit or");
+                        _helper.SendPublicMessage("everyone will be kicked.");
                     }
 
                     if (festivalTicksForReset >= this.Config.WinterStarTimeOut)
@@ -633,52 +641,51 @@ namespace JunimoServer.Services.AlwaysOnServer
         {
             var currentDate = SDate.Now();
 
-            if (Game1.CurrentEvent != null && Game1.CurrentEvent.isFestival)
+            if (Game1.CurrentEvent is not {isFestival: true})
             {
-                if (currentDate == eggFestival)
-                {
-                    eventCommandUsed = true;
-                    eggHuntAvailable = true;
-                }
-                else if (currentDate == flowerDance)
-                {
-                    eventCommandUsed = true;
-                    flowerDanceAvailable = true;
-                }
-                else if (currentDate == luau)
-                {
-                    eventCommandUsed = true;
-                    luauSoupAvailable = true;
-                }
-                else if (currentDate == danceOfJellies)
-                {
-                    eventCommandUsed = true;
-                    jellyDanceAvailable = true;
-                }
-                else if (currentDate == stardewValleyFair)
-                {
-                    eventCommandUsed = true;
-                    grangeDisplayAvailable = true;
-                }
-                else if (currentDate == spiritsEve)
-                {
-                    eventCommandUsed = true;
-                    goldenPumpkinAvailable = true;
-                }
-                else if (currentDate == festivalOfIce)
-                {
-                    eventCommandUsed = true;
-                    iceFishingAvailable = true;
-                }
-                else if (currentDate == feastOfWinterStar)
-                {
-                    eventCommandUsed = true;
-                    winterFeastAvailable = true;
-                }
+                _helper.SendPublicMessage("Must be at festival to start the event.");
+                return;
             }
-            else
+
+            if (currentDate == eggFestival)
             {
-                this.SendChatMessage("I'm not at a Festival.");
+                eventCommandUsed = true;
+                eggHuntAvailable = true;
+            }
+            else if (currentDate == flowerDance)
+            {
+                eventCommandUsed = true;
+                flowerDanceAvailable = true;
+            }
+            else if (currentDate == luau)
+            {
+                eventCommandUsed = true;
+                luauSoupAvailable = true;
+            }
+            else if (currentDate == danceOfJellies)
+            {
+                eventCommandUsed = true;
+                jellyDanceAvailable = true;
+            }
+            else if (currentDate == stardewValleyFair)
+            {
+                eventCommandUsed = true;
+                grangeDisplayAvailable = true;
+            }
+            else if (currentDate == spiritsEve)
+            {
+                eventCommandUsed = true;
+                goldenPumpkinAvailable = true;
+            }
+            else if (currentDate == festivalOfIce)
+            {
+                eventCommandUsed = true;
+                iceFishingAvailable = true;
+            }
+            else if (currentDate == feastOfWinterStar)
+            {
+                eventCommandUsed = true;
+                winterFeastAvailable = true;
             }
         }
 
@@ -920,7 +927,7 @@ namespace JunimoServer.Services.AlwaysOnServer
                             {
                                 Game1.player.Money -= 5000;
                                 Game1.player.mailReceived.Add("JojaMember");
-                                this.SendChatMessage("Buying Joja Membership");
+                                _helper.SendPublicMessage("Buying Joja Membership");
                             }
 
                             if (Game1.player.Money >= 30000 && !Game1.player.mailReceived.Contains("jojaBoilerRoom"))
@@ -928,7 +935,7 @@ namespace JunimoServer.Services.AlwaysOnServer
                                 Game1.player.Money -= 15000;
                                 Game1.player.mailReceived.Add("ccBoilerRoom");
                                 Game1.player.mailReceived.Add("jojaBoilerRoom");
-                                this.SendChatMessage("Buying Joja Minecarts");
+                                _helper.SendPublicMessage("Buying Joja Minecarts");
                             }
 
                             if (Game1.player.Money >= 40000 && !Game1.player.mailReceived.Contains("jojaFishTank"))
@@ -936,7 +943,7 @@ namespace JunimoServer.Services.AlwaysOnServer
                                 Game1.player.Money -= 20000;
                                 Game1.player.mailReceived.Add("ccFishTank");
                                 Game1.player.mailReceived.Add("jojaFishTank");
-                                this.SendChatMessage("Buying Joja Panning");
+                                _helper.SendPublicMessage("Buying Joja Panning");
                             }
 
                             if (Game1.player.Money >= 50000 && !Game1.player.mailReceived.Contains("jojaCraftsRoom"))
@@ -944,7 +951,7 @@ namespace JunimoServer.Services.AlwaysOnServer
                                 Game1.player.Money -= 25000;
                                 Game1.player.mailReceived.Add("ccCraftsRoom");
                                 Game1.player.mailReceived.Add("jojaCraftsRoom");
-                                this.SendChatMessage("Buying Joja Bridge");
+                                _helper.SendPublicMessage("Buying Joja Bridge");
                             }
 
                             if (Game1.player.Money >= 70000 && !Game1.player.mailReceived.Contains("jojaPantry"))
@@ -952,7 +959,7 @@ namespace JunimoServer.Services.AlwaysOnServer
                                 Game1.player.Money -= 35000;
                                 Game1.player.mailReceived.Add("ccPantry");
                                 Game1.player.mailReceived.Add("jojaPantry");
-                                this.SendChatMessage("Buying Joja Greenhouse");
+                                _helper.SendPublicMessage("Buying Joja Greenhouse");
                             }
 
                             if (Game1.player.Money >= 80000 && !Game1.player.mailReceived.Contains("jojaVault"))
@@ -960,7 +967,7 @@ namespace JunimoServer.Services.AlwaysOnServer
                                 Game1.player.Money -= 40000;
                                 Game1.player.mailReceived.Add("ccVault");
                                 Game1.player.mailReceived.Add("jojaVault");
-                                this.SendChatMessage("Buying Joja Bus");
+                                _helper.SendPublicMessage("Buying Joja Bus");
                                 Game1.player.eventsSeen.Add(502261);
                             }
                         }
@@ -1190,13 +1197,19 @@ namespace JunimoServer.Services.AlwaysOnServer
         /// <param name="e">The event data.</param>
         private void OnSaving(object sender, SavingEventArgs e)
         {
-            // shipping menu "OK" click through code
+            if (_disableRendering)
+            {
+                _optimizer.EnableDrawing();
+            }
+
             if (IsAutomating)
             {
-                _monitor.Log("This is the Shipping Menu");
                 shippingMenuActive = true;
                 if (Game1.activeClickableMenu is ShippingMenu)
+                {
+                    _monitor.Log("This is the Shipping Menu");
                     _helper.Reflection.GetMethod(Game1.activeClickableMenu, "okClicked").Invoke();
+                }
             }
         }
 
@@ -1233,7 +1246,6 @@ namespace JunimoServer.Services.AlwaysOnServer
             if (Game1.timeOfDay == 610)
             {
                 shippingMenuActive = false;
-                Game1.player.difficultyModifier = this.Config.ProfitMargin * .01f;
 
                 Game1.options.setServerMode("online");
                 timeOutTicksForReset = 0;
@@ -1244,15 +1256,6 @@ namespace JunimoServer.Services.AlwaysOnServer
             {
                 Game1.paused = false;
             }
-        }
-
-        /// <summary>Send a chat message.</summary>
-        /// <param name="message">The message text.</param>
-        private void SendChatMessage(string message)
-        {
-            Game1.chatBox.activate();
-            Game1.chatBox.setText(message);
-            Game1.chatBox.chatBox.RecieveCommandInput('\r');
         }
 
         /// <summary>Leave the current festival, if any.</summary>

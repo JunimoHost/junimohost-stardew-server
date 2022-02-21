@@ -1,6 +1,6 @@
 ﻿using StardewModdingAPI;
 
-namespace JunimoServer.Services.PersistentOptions
+namespace JunimoServer.Services.PersistentOption
 {
     public class PersistentOptions
     {
@@ -17,7 +17,7 @@ namespace JunimoServer.Services.PersistentOptions
 
         public void SetPersistentOptions(PersistentOptionsSaveData optionsSaveData)
         {
-            _helper.Data.WriteSaveData(SaveKey, optionsSaveData);
+            _helper.Data.WriteGlobalData(SaveKey, optionsSaveData);
             Data = optionsSaveData;
         }
     }

@@ -11,8 +11,8 @@ using JunimoServer.Services.Commands;
 using JunimoServer.Services.CropSaver;
 using JunimoServer.Services.GameCreator;
 using JunimoServer.Services.GameLoader;
-using JunimoServer.Services.PersistentOptions;
-using JunimoServer.Services.ServerOptimizer;
+using JunimoServer.Services.PersistentOption;
+using JunimoServer.Services.ServerOptim;
 using SimpleHttp;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
@@ -23,6 +23,7 @@ namespace JunimoServer
 {
     internal class ModEntry : Mod
     {
+        private const bool DisableRendering = false;
         private GameCreatorService _gameCreatorService;
         private GameCreatorController _gameCreatorController;
         private GameLoaderService _gameLoaderService;
@@ -31,19 +32,21 @@ namespace JunimoServer
 
         public override void Entry(IModHelper helper)
         {
+            Game1.options.pauseWhenOutOfFocus = false;
+
             var harmony = new Harmony(this.ModManifest.UniqueID);
 
             var options = new PersistentOptions(helper);
             var chatCommands = new ChatCommands(Monitor, harmony, helper);
             var cropSaver = new CropSaver(helper, harmony, Monitor);
-            var alwaysOnServer = new AlwaysOnServer(helper, Monitor, chatCommands);
             _serverOptimizer = new ServerOptimizer(harmony, Monitor);
+            var alwaysOnServer = new AlwaysOnServer(helper, Monitor, chatCommands, _serverOptimizer, DisableRendering);
             _gameLoaderService = new GameLoaderService(helper, Monitor);
             _gameCreatorService = new GameCreatorService(_gameLoaderService, options);
             _gameCreatorController = new GameCreatorController(Monitor, _gameCreatorService);
-            
+
             CabinCommand.Register(helper, chatCommands, options, Monitor);
-            
+
             helper.Events.Display.RenderedActiveMenu += OnRenderedActiveMenu;
             helper.Events.Input.ButtonPressed += OnButtonPressed;
 
@@ -154,7 +157,10 @@ namespace JunimoServer
                 _gameLoaderService.LoadSave();
             }
 
-            // _serverOptimizer.DisableDrawing();
+            if (DisableRendering)
+            {
+                _serverOptimizer.DisableDrawing();
+            }
         }
     }
 }

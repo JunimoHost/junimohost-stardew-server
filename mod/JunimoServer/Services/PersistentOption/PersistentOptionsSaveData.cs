@@ -1,4 +1,4 @@
-﻿namespace JunimoServer.Services.PersistentOptions
+﻿namespace JunimoServer.Services.PersistentOption
 {
     public class PersistentOptionsSaveData
     {

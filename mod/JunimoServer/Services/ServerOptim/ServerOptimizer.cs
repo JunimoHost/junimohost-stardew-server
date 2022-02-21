@@ -2,7 +2,7 @@
 using StardewModdingAPI;
 using StardewValley;
 
-namespace JunimoServer.Services.ServerOptimizer
+namespace JunimoServer.Services.ServerOptim
 {
     public class ServerOptimizer
     {
@@ -20,6 +20,11 @@ namespace JunimoServer.Services.ServerOptimizer
         public void DisableDrawing()
         {
             ServerOptimizerOverrides.DisableDrawing();
+        }
+        
+        public void EnableDrawing()
+        {
+            ServerOptimizerOverrides.EnableDrawing();
         }
     }
 }

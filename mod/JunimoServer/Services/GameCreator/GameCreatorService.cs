@@ -1,11 +1,9 @@
-﻿using JunimoServer.Services.GameLoader;
+﻿using System.Threading;
+using JunimoServer.Services.GameLoader;
+using JunimoServer.Services.PersistentOption;
 using Microsoft.Xna.Framework;
-using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Menus;
-using System;
-using System.Threading;
-using JunimoServer.Services.PersistentOptions;
 
 namespace JunimoServer.Services.GameCreator
 {
@@ -13,11 +11,11 @@ namespace JunimoServer.Services.GameCreator
     {
         private readonly GameLoaderService _gameLoader;
         private static readonly Mutex CreateGameMutex = new Mutex();
-        private readonly PersistentOptions.PersistentOptions _options;
+        private readonly PersistentOptions _options;
 
         public bool GameIsCreating { get; private set; }
 
-        public GameCreatorService(GameLoaderService gameLoader, PersistentOptions.PersistentOptions options)
+        public GameCreatorService(GameLoaderService gameLoader, PersistentOptions options)
         {
             _options = options;
             _gameLoader = gameLoader;
