@@ -216,6 +216,10 @@ namespace JunimoServer.Services.AlwaysOnServer
 
             Game1.displayHUD = true;
             Game1.addHUDMessage(new HUDMessage("Auto Mode Off!", ""));
+            if (_disableRendering)
+            {
+                _optimizer.EnableDrawing();
+            }
         }
 
         private void TurnOnAutoMode()
@@ -233,6 +237,10 @@ namespace JunimoServer.Services.AlwaysOnServer
 
             HideFarmer();
 
+            if (_disableRendering)
+            {
+                _optimizer.DisableDrawing();
+            }
             // set in game levels to max (leaving out, not sure why this was needed)
             // Game1.player.FarmingLevel = 10;
             // Game1.player.MiningLevel = 10;

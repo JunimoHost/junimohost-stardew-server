@@ -157,11 +157,6 @@ namespace JunimoServer
             {
                 _gameLoaderService.LoadSave();
             }
-
-            if (DisableRendering)
-            {
-                _serverOptimizer.DisableDrawing();
-            }
         }
     }
 }
