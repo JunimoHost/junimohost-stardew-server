@@ -21,9 +21,7 @@ namespace JunimoServer.Services.Commands
                 "!cabin plank|log|stone places a cabin right of player's location.\nThis will clear basic debris to make space.",
                 (args, msg) =>
                 {
-                    var numExistingCabins =
-                        helper.Reflection.GetMethod(Game1.server, "cabins")
-                            .Invoke<IEnumerable<Cabin>>().ToList().Count;
+                    var numExistingCabins = helper.GetCurrentNumCabins();
                     var numTotalCabins = options.Data.MaxPlayers;
 
                     monitor.Log($"\nnumExistingCabins: {numExistingCabins}\nnumTotalCabins: {numTotalCabins}");

@@ -13,6 +13,7 @@ using JunimoServer.Services.GameCreator;
 using JunimoServer.Services.GameLoader;
 using JunimoServer.Services.PersistentOption;
 using JunimoServer.Services.ServerOptim;
+using JunimoServer.Util;
 using SimpleHttp;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
@@ -24,12 +25,13 @@ namespace JunimoServer
     internal class ModEntry : Mod
     {
         private const bool DisableRendering = true;
-        
+
         private GameCreatorService _gameCreatorService;
         private GameCreatorController _gameCreatorController;
         private GameLoaderService _gameLoaderService;
         private ServerOptimizer _serverOptimizer;
         private bool _titleLaunched = false;
+
 
         public override void Entry(IModHelper helper)
         {
@@ -50,6 +52,8 @@ namespace JunimoServer
 
             helper.Events.Display.RenderedActiveMenu += OnRenderedActiveMenu;
             helper.Events.Input.ButtonPressed += OnButtonPressed;
+
+            helper.Events.Multiplayer.PeerConnected += OnPeerConnected;
 
             Monitor.Log("REST API starting: http://localhost:8081", LogLevel.Info);
 
@@ -72,6 +76,24 @@ namespace JunimoServer
             //this.Monitor.Log($"Starting Server on 50051...", LogLevel.Debug);
 
             //server.Start();
+        }
+
+        private void OnPeerConnected(object sender, PeerConnectedEventArgs e)
+        {
+            ConditionallySendWelcomeMessage();
+        }
+
+        private bool _sentWelcomeMessage = false;
+
+        private void ConditionallySendWelcomeMessage()
+        {
+            if (Helper.GetCurrentNumCabins() <= 1 || _sentWelcomeMessage) return;
+            Helper.SendPublicMessage("Welcome to your new server! Thank you for supporting us.");
+            Helper.SendPublicMessage("");
+            Helper.SendPublicMessage(
+                "To build cabins quickly for your friends type !cabin when next to the area you'd like it built.");
+            Helper.SendPublicMessage("Type !help for more information on commands.");
+            _sentWelcomeMessage = true;
         }
 
         private async Task OnHttp(HttpListenerRequest rq, HttpListenerResponse res)

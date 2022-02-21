@@ -1,5 +1,8 @@
-﻿using StardewModdingAPI;
+﻿using System.Collections.Generic;
+using System.Linq;
+using StardewModdingAPI;
 using StardewValley;
+using StardewValley.Locations;
 using StardewValley.Menus;
 
 namespace JunimoServer.Util
@@ -16,6 +19,12 @@ namespace JunimoServer.Util
         {
             var multiplayer = helper.Reflection.GetField<Multiplayer>(typeof(Game1), "multiplayer").GetValue();
             multiplayer.sendChatMessage(LocalizedContentManager.CurrentLanguageCode, msg, uniqueMultiplayerId);
+        }
+
+        public static int GetCurrentNumCabins(this IModHelper helper)
+        {
+            return helper.Reflection.GetMethod(Game1.server, "cabins")
+                .Invoke<IEnumerable<Cabin>>().ToList().Count;
         }
     }
 }
