@@ -12,8 +12,6 @@ namespace JunimoServer.Services.AlwaysOnServer
         public bool IsCommunityCenterRun { get; set; } = true;
 
         public bool LockPlayerChests { get; set; } = true;
-        public bool ClientsCanPause { get; set; } = false;
-
 
         public int EggHuntCountDownConfig { get; set; } = 60;
         public int FlowerDanceCountDownConfig { get; set; } = 60;

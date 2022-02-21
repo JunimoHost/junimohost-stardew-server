@@ -20,6 +20,8 @@ namespace JunimoServer.Services.AlwaysOnServer
 {
     public class AlwaysOnServer
     {
+
+        private const string StartNowText = "Type !event to start now";
         /// <summary>The mod configuration from the player.</summary>
         private AlwaysOnConfig Config;
 
@@ -231,12 +233,12 @@ namespace JunimoServer.Services.AlwaysOnServer
 
             HideFarmer();
 
-            // set in game levels to max
-            Game1.player.FarmingLevel = 10;
-            Game1.player.MiningLevel = 10;
-            Game1.player.ForagingLevel = 10;
-            Game1.player.FishingLevel = 10;
-            Game1.player.CombatLevel = 10;
+            // set in game levels to max (leaving out, not sure why this was needed)
+            // Game1.player.FarmingLevel = 10;
+            // Game1.player.MiningLevel = 10;
+            // Game1.player.ForagingLevel = 10;
+            // Game1.player.FishingLevel = 10;
+            // Game1.player.CombatLevel = 10;
         }
 
         /// <summary>Raised after the player presses a button on the keyboard, controller, or mouse.</summary>
@@ -266,32 +268,6 @@ namespace JunimoServer.Services.AlwaysOnServer
             else
                 Game1.paused = false;
 
-            // toggle pause if requested
-            if (this.IsAutomating && this.Config.ClientsCanPause)
-            {
-                List<ChatMessage> messages = _helper.Reflection.GetField<List<ChatMessage>>(Game1.chatBox, "messages")
-                    .GetValue();
-                if (messages.Count > 0)
-                {
-                    var messagetoconvert = messages[messages.Count - 1].message;
-                    string actualmessage = ChatMessage.makeMessagePlaintext(messagetoconvert, true);
-                    string lastFragment = actualmessage.Split(' ')[1];
-
-                    if (lastFragment != null && lastFragment == "!pause")
-                    {
-                        Game1.netWorldState.Value.IsPaused = true;
-                        clientPaused = true;
-                        _helper.SendPublicMessage("Game Paused");
-                    }
-
-                    if (lastFragment != null && lastFragment == "!unpause")
-                    {
-                        Game1.netWorldState.Value.IsPaused = false;
-                        clientPaused = false;
-                        _helper.SendPublicMessage("Game Resumed");
-                    }
-                }
-            }
 
             //left click menu spammer and event skipper to get through random events happening
             //also moves player around, this seems to free host from random bugs sometimes
@@ -327,6 +303,7 @@ namespace JunimoServer.Services.AlwaysOnServer
                     if (eggHuntCountDown == 1)
                     {
                         _helper.SendPublicMessage($"The Egg Hunt will begin in {chatEgg:0.#} minutes.");
+                        _helper.SendPublicMessage(StartNowText);
                     }
 
                     if (eggHuntCountDown == this.Config.EggHuntCountDownConfig + 1)
@@ -367,6 +344,7 @@ namespace JunimoServer.Services.AlwaysOnServer
                     if (flowerDanceCountDown == 1)
                     {
                         _helper.SendPublicMessage($"The Flower Dance will begin in {chatFlower:0.#} minutes.");
+                        _helper.SendPublicMessage(StartNowText);
                     }
 
                     if (flowerDanceCountDown == this.Config.FlowerDanceCountDownConfig + 1)
@@ -410,6 +388,7 @@ namespace JunimoServer.Services.AlwaysOnServer
                     if (luauSoupCountDown == 1)
                     {
                         _helper.SendPublicMessage($"The Soup Tasting will begin in {chatSoup:0.#} minutes.");
+                        _helper.SendPublicMessage(StartNowText);
 
                         //add iridium starfruit to soup
                         var item = new SObject(268, 1, false, -1, 3);
@@ -455,6 +434,8 @@ namespace JunimoServer.Services.AlwaysOnServer
                     {
                         _helper.SendPublicMessage(
                             $"The Dance of the Moonlight Jellies will begin in {chatJelly:0.#} minutes.");
+                        _helper.SendPublicMessage(StartNowText);
+
                     }
 
                     if (jellyDanceCountDown == this.Config.JellyDanceCountDownConfig + 1)
@@ -508,6 +489,8 @@ namespace JunimoServer.Services.AlwaysOnServer
                     if (grangeDisplayCountDown == 1)
                     {
                         _helper.SendPublicMessage($"The Grange Judging will begin in {chatGrange:0.#} minutes.");
+                        _helper.SendPublicMessage(StartNowText);
+
                     }
 
                     if (grangeDisplayCountDown == this.Config.GrangeDisplayCountDownConfig + 1)
@@ -557,6 +540,8 @@ namespace JunimoServer.Services.AlwaysOnServer
                     if (iceFishingCountDown == 1)
                     {
                         _helper.SendPublicMessage($"The Ice Fishing Contest will begin in {chatIceFish:0.#} minutes.");
+                        _helper.SendPublicMessage(StartNowText);
+
                     }
 
                     if (iceFishingCountDown == this.Config.IceFishingCountDownConfig + 1)
@@ -606,14 +591,14 @@ namespace JunimoServer.Services.AlwaysOnServer
             }
 
             // Skip level up menu
-            if (IsAutomating && Game1.activeClickableMenu is LevelUpMenu)
+            if (IsAutomating && Game1.activeClickableMenu is LevelUpMenu menu)
             {
                 // Taken from LevelUpMenu.cs:504
                 _monitor.Log("Skipping level up menu");
-                ((LevelUpMenu) Game1.activeClickableMenu).isActive = false;
-                ((LevelUpMenu) Game1.activeClickableMenu).informationUp = false;
-                ((LevelUpMenu) Game1.activeClickableMenu).isProfessionChooser = false;
-                ((LevelUpMenu) Game1.activeClickableMenu).RemoveLevelFromLevelList();
+                menu.isActive = false;
+                menu.informationUp = false;
+                menu.isProfessionChooser = false;
+                menu.RemoveLevelFromLevelList();
             }
         }
 
@@ -696,7 +681,7 @@ namespace JunimoServer.Services.AlwaysOnServer
         {
             HandleAutoSleep();
             HandleAutoLeaveFestival();
-            HandleAutoGoToFestival();
+            // HandleAutoGoToFestival();
 
 
             // lock player chests
@@ -789,15 +774,185 @@ namespace JunimoServer.Services.AlwaysOnServer
         {
             var numPlayers = Game1.otherFarmers.Count;
             if (numPlayers == 0) return;
-
+        
             var numReady = Game1.player.team.GetNumberReady("festivalStart");
             var numReq = Game1.player.team.GetNumberRequired("festivalStart");
-
+        
             if (numReq - numReady != 1)
             {
                 return;
             }
+            
+            Game1.player.team.SetLocalReady("festivalStart", true);
+            Game1.activeClickableMenu = new ReadyCheckDialog("festivalStart", true, who =>
+            {
+                Game1.exitActiveMenu();
+            });
+        
+           
+        }
 
+        private void LockPlayersChests()
+        {
+            foreach (var farmer in Game1.getOnlineFarmers().Where(farmer => !farmer.IsMainPlayer))
+            {
+                if (farmer.currentLocation is FarmHouse house && farmer != house.owner)
+                {
+                    // lock offline player inventory
+                    if (house is Cabin cabin)
+                    {
+                        NetMutex inventoryMutex = _helper.Reflection.GetField<NetMutex>(cabin, "inventoryMutex")
+                            .GetValue();
+                        inventoryMutex.RequestLock();
+                    }
+
+                    // lock fridge & chests
+                    house.fridge.Value.mutex.RequestLock();
+                    foreach (var chest in house.objects.Values.OfType<Chest>())
+                        chest.mutex.RequestLock();
+                }
+            }
+        }
+
+
+        /// <summary>Raised after the in-game clock time changes.</summary>
+        /// <param name="sender">The event sender.</param>
+        /// <param name="e">The event data.</param>
+        private void OnTimeChanged(object sender, TimeChangedEventArgs e)
+        {
+            if (!IsAutomating) return;
+            
+            var currentTime = Game1.timeOfDay;
+            var numPlayers = Game1.otherFarmers.Count;
+            var currentDate = SDate.Now();
+            
+            UpdateFestivalStatus();
+
+            //handles various events that the host normally has to click through
+            if (currentDate != grampasGhost && currentDate != eggFestival && currentDate != flowerDance &&
+                currentDate != luau && currentDate != danceOfJellies && currentDate != stardewValleyFair &&
+                currentDate != spiritsEve && currentDate != festivalOfIce && currentDate != feastOfWinterStar)
+            {
+                if (currentTime == 620)
+                {
+                    //check mail 10 a day
+                    for (int i = 0; i < 10; i++)
+                    {
+                        _helper.Reflection.GetMethod(Game1.currentLocation, "mailbox").Invoke();
+                    }
+                }
+
+                if (currentTime == 630)
+                {
+                    //rustkey-sewers unlock
+                    if (!Game1.player.hasRustyKey)
+                    {
+                        int items1 = _helper.Reflection.GetMethod(new LibraryMuseum(), "numberOfMuseumItemsOfType")
+                            .Invoke<int>("Arch");
+                        int items2 = _helper.Reflection.GetMethod(new LibraryMuseum(), "numberOfMuseumItemsOfType")
+                            .Invoke<int>("Minerals");
+                        int items3 = items1 + items2;
+                        if (items3 >= 60)
+                        {
+                            Game1.player.eventsSeen.Add(295672);
+                            Game1.player.eventsSeen.Add(66);
+                            Game1.player.hasRustyKey = true;
+                        }
+                    }
+
+
+                    //community center complete
+                    if (this.Config.IsCommunityCenterRun)
+                    {
+                        if (!Game1.player.eventsSeen.Contains(191393) &&
+                            Game1.player.mailReceived.Contains("ccCraftsRoom") &&
+                            Game1.player.mailReceived.Contains("ccVault") &&
+                            Game1.player.mailReceived.Contains("ccFishTank") &&
+                            Game1.player.mailReceived.Contains("ccBoilerRoom") &&
+                            Game1.player.mailReceived.Contains("ccPantry") &&
+                            Game1.player.mailReceived.Contains("ccBulletin"))
+                        {
+                            CommunityCenter locationFromName =
+                                Game1.getLocationFromName("CommunityCenter") as CommunityCenter;
+                            for (int index = 0; index < locationFromName.areasComplete.Count; ++index)
+                                locationFromName.areasComplete[index] = true;
+                            Game1.player.eventsSeen.Add(191393);
+                        }
+                    }
+
+                    //Joja run 
+                    if (!this.Config.IsCommunityCenterRun)
+                    {
+                        if (Game1.player.Money >= 10000 && !Game1.player.mailReceived.Contains("JojaMember"))
+                        {
+                            Game1.player.Money -= 5000;
+                            Game1.player.mailReceived.Add("JojaMember");
+                            _helper.SendPublicMessage("Buying Joja Membership");
+                        }
+
+                        if (Game1.player.Money >= 30000 && !Game1.player.mailReceived.Contains("jojaBoilerRoom"))
+                        {
+                            Game1.player.Money -= 15000;
+                            Game1.player.mailReceived.Add("ccBoilerRoom");
+                            Game1.player.mailReceived.Add("jojaBoilerRoom");
+                            _helper.SendPublicMessage("Buying Joja Minecarts");
+                        }
+
+                        if (Game1.player.Money >= 40000 && !Game1.player.mailReceived.Contains("jojaFishTank"))
+                        {
+                            Game1.player.Money -= 20000;
+                            Game1.player.mailReceived.Add("ccFishTank");
+                            Game1.player.mailReceived.Add("jojaFishTank");
+                            _helper.SendPublicMessage("Buying Joja Panning");
+                        }
+
+                        if (Game1.player.Money >= 50000 && !Game1.player.mailReceived.Contains("jojaCraftsRoom"))
+                        {
+                            Game1.player.Money -= 25000;
+                            Game1.player.mailReceived.Add("ccCraftsRoom");
+                            Game1.player.mailReceived.Add("jojaCraftsRoom");
+                            _helper.SendPublicMessage("Buying Joja Bridge");
+                        }
+
+                        if (Game1.player.Money >= 70000 && !Game1.player.mailReceived.Contains("jojaPantry"))
+                        {
+                            Game1.player.Money -= 35000;
+                            Game1.player.mailReceived.Add("ccPantry");
+                            Game1.player.mailReceived.Add("jojaPantry");
+                            _helper.SendPublicMessage("Buying Joja Greenhouse");
+                        }
+
+                        if (Game1.player.Money >= 80000 && !Game1.player.mailReceived.Contains("jojaVault"))
+                        {
+                            Game1.player.Money -= 40000;
+                            Game1.player.mailReceived.Add("ccVault");
+                            Game1.player.mailReceived.Add("jojaVault");
+                            _helper.SendPublicMessage("Buying Joja Bus");
+                            Game1.player.eventsSeen.Add(502261);
+                        }
+                    }
+                }
+
+                //Hide at start of day
+                if (currentTime is 600 or 610)
+                {
+                    HideFarmer();
+                }
+                
+
+                //get fishing rod (standard spam clicker will get through cutscene)
+                if (currentTime == 900 && !Game1.player.eventsSeen.Contains(739330))
+                {
+                    Game1.player.increaseBackpackSize(1);
+                    Game1.warpFarmer("Beach", 50, 50, 1);
+                }
+            }
+        }
+
+        private void UpdateFestivalStatus()
+        {
+            if (Game1.otherFarmers.Count == 0) return;
+            
             var currentDate = SDate.Now();
 
             if (currentDate == eggFestival)
@@ -834,168 +989,12 @@ namespace JunimoServer.Services.AlwaysOnServer
             }
         }
 
-        private void LockPlayersChests()
-        {
-            foreach (var farmer in Game1.getOnlineFarmers().Where(farmer => !farmer.IsMainPlayer))
-            {
-                if (farmer.currentLocation is FarmHouse house && farmer != house.owner)
-                {
-                    // lock offline player inventory
-                    if (house is Cabin cabin)
-                    {
-                        NetMutex inventoryMutex = _helper.Reflection.GetField<NetMutex>(cabin, "inventoryMutex")
-                            .GetValue();
-                        inventoryMutex.RequestLock();
-                    }
-
-                    // lock fridge & chests
-                    house.fridge.Value.mutex.RequestLock();
-                    foreach (var chest in house.objects.Values.OfType<Chest>())
-                        chest.mutex.RequestLock();
-                }
-            }
-        }
-
-
-        /// <summary>Raised after the in-game clock time changes.</summary>
-        /// <param name="sender">The event sender.</param>
-        /// <param name="e">The event data.</param>
-        private void OnTimeChanged(object sender, TimeChangedEventArgs e)
-        {
-            var currentTime = Game1.timeOfDay;
-            var numPlayers = Game1.otherFarmers.Count;
-            var currentDate = SDate.Now();
-
-            //handles various events that the host normally has to click through
-            if (IsAutomating)
-            {
-                if (currentDate != grampasGhost && currentDate != eggFestival && currentDate != flowerDance &&
-                    currentDate != luau && currentDate != danceOfJellies && currentDate != stardewValleyFair &&
-                    currentDate != spiritsEve && currentDate != festivalOfIce && currentDate != feastOfWinterStar)
-                {
-                    if (currentTime == 620)
-                    {
-                        //check mail 10 a day
-                        for (int i = 0; i < 10; i++)
-                        {
-                            _helper.Reflection.GetMethod(Game1.currentLocation, "mailbox").Invoke();
-                        }
-                    }
-
-                    if (currentTime == 630)
-                    {
-                        //rustkey-sewers unlock
-                        if (!Game1.player.hasRustyKey)
-                        {
-                            int items1 = _helper.Reflection.GetMethod(new LibraryMuseum(), "numberOfMuseumItemsOfType")
-                                .Invoke<int>("Arch");
-                            int items2 = _helper.Reflection.GetMethod(new LibraryMuseum(), "numberOfMuseumItemsOfType")
-                                .Invoke<int>("Minerals");
-                            int items3 = items1 + items2;
-                            if (items3 >= 60)
-                            {
-                                Game1.player.eventsSeen.Add(295672);
-                                Game1.player.eventsSeen.Add(66);
-                                Game1.player.hasRustyKey = true;
-                            }
-                        }
-
-
-                        //community center complete
-                        if (this.Config.IsCommunityCenterRun)
-                        {
-                            if (!Game1.player.eventsSeen.Contains(191393) &&
-                                Game1.player.mailReceived.Contains("ccCraftsRoom") &&
-                                Game1.player.mailReceived.Contains("ccVault") &&
-                                Game1.player.mailReceived.Contains("ccFishTank") &&
-                                Game1.player.mailReceived.Contains("ccBoilerRoom") &&
-                                Game1.player.mailReceived.Contains("ccPantry") &&
-                                Game1.player.mailReceived.Contains("ccBulletin"))
-                            {
-                                CommunityCenter locationFromName =
-                                    Game1.getLocationFromName("CommunityCenter") as CommunityCenter;
-                                for (int index = 0; index < locationFromName.areasComplete.Count; ++index)
-                                    locationFromName.areasComplete[index] = true;
-                                Game1.player.eventsSeen.Add(191393);
-                            }
-                        }
-
-                        //Joja run 
-                        if (!this.Config.IsCommunityCenterRun)
-                        {
-                            if (Game1.player.Money >= 10000 && !Game1.player.mailReceived.Contains("JojaMember"))
-                            {
-                                Game1.player.Money -= 5000;
-                                Game1.player.mailReceived.Add("JojaMember");
-                                _helper.SendPublicMessage("Buying Joja Membership");
-                            }
-
-                            if (Game1.player.Money >= 30000 && !Game1.player.mailReceived.Contains("jojaBoilerRoom"))
-                            {
-                                Game1.player.Money -= 15000;
-                                Game1.player.mailReceived.Add("ccBoilerRoom");
-                                Game1.player.mailReceived.Add("jojaBoilerRoom");
-                                _helper.SendPublicMessage("Buying Joja Minecarts");
-                            }
-
-                            if (Game1.player.Money >= 40000 && !Game1.player.mailReceived.Contains("jojaFishTank"))
-                            {
-                                Game1.player.Money -= 20000;
-                                Game1.player.mailReceived.Add("ccFishTank");
-                                Game1.player.mailReceived.Add("jojaFishTank");
-                                _helper.SendPublicMessage("Buying Joja Panning");
-                            }
-
-                            if (Game1.player.Money >= 50000 && !Game1.player.mailReceived.Contains("jojaCraftsRoom"))
-                            {
-                                Game1.player.Money -= 25000;
-                                Game1.player.mailReceived.Add("ccCraftsRoom");
-                                Game1.player.mailReceived.Add("jojaCraftsRoom");
-                                _helper.SendPublicMessage("Buying Joja Bridge");
-                            }
-
-                            if (Game1.player.Money >= 70000 && !Game1.player.mailReceived.Contains("jojaPantry"))
-                            {
-                                Game1.player.Money -= 35000;
-                                Game1.player.mailReceived.Add("ccPantry");
-                                Game1.player.mailReceived.Add("jojaPantry");
-                                _helper.SendPublicMessage("Buying Joja Greenhouse");
-                            }
-
-                            if (Game1.player.Money >= 80000 && !Game1.player.mailReceived.Contains("jojaVault"))
-                            {
-                                Game1.player.Money -= 40000;
-                                Game1.player.mailReceived.Add("ccVault");
-                                Game1.player.mailReceived.Add("jojaVault");
-                                _helper.SendPublicMessage("Buying Joja Bus");
-                                Game1.player.eventsSeen.Add(502261);
-                            }
-                        }
-                    }
-
-                    //Hide at start of day
-                    if (currentTime == 610)
-                    {
-                        HideFarmer();
-                    }
-
-                    //get fishing rod (standard spam clicker will get through cutscene)
-                    if (currentTime == 900 && !Game1.player.eventsSeen.Contains(739330))
-                    {
-                        Game1.player.increaseBackpackSize(1);
-                        Game1.warpFarmer("Beach", 50, 50, 1);
-                    }
-                }
-            }
-        }
-
         public void EggFestival()
         {
             var currentTime = Game1.timeOfDay;
 
-            if (currentTime >= 900 && currentTime <= 1400)
+            if (currentTime is >= 900 and <= 1400)
             {
-                //teleports to egg festival
                 Game1.player.team.SetLocalReady("festivalStart", true);
                 Game1.activeClickableMenu = new ReadyCheckDialog("festivalStart", true, who =>
                 {
@@ -1011,7 +1010,6 @@ namespace JunimoServer.Services.AlwaysOnServer
                 Game1.options.setServerMode("online");
                 eggHuntCountDown = 0;
                 festivalTicksForReset = 0;
-                StartSleep();
             }
         }
 
@@ -1020,7 +1018,7 @@ namespace JunimoServer.Services.AlwaysOnServer
         {
             var currentTime = Game1.timeOfDay;
 
-            if (currentTime >= 900 && currentTime <= 1400)
+            if (currentTime is >= 900 and <= 1400)
             {
                 Game1.player.team.SetLocalReady("festivalStart", true);
                 Game1.activeClickableMenu = new ReadyCheckDialog("festivalStart", true, who =>

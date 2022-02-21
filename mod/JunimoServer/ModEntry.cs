@@ -23,7 +23,8 @@ namespace JunimoServer
 {
     internal class ModEntry : Mod
     {
-        private const bool DisableRendering = false;
+        private const bool DisableRendering = true;
+        
         private GameCreatorService _gameCreatorService;
         private GameCreatorController _gameCreatorController;
         private GameLoaderService _gameLoaderService;
