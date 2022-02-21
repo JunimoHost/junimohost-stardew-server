@@ -87,7 +87,7 @@ namespace JunimoServer
 
         private void ConditionallySendWelcomeMessage()
         {
-            if (Helper.GetCurrentNumCabins() <= 1 || _sentWelcomeMessage) return;
+            if (Helper.GetCurrentNumCabins() > 1 || _sentWelcomeMessage) return;
             Helper.SendPublicMessage("Welcome to your new server! Thank you for supporting us.");
             Helper.SendPublicMessage("");
             Helper.SendPublicMessage(
