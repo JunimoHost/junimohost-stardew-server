@@ -52,7 +52,7 @@ namespace JunimoServer.Services.CropSaver
                 var dirt = saverCrop.TryGetCoorespondingDirt();
                 if (dirt != null)
                 {
-                    if (!onlineIds.Contains(saverCrop.ownerId) && dirt.needsWatering())
+                    if (!onlineIds.Contains(saverCrop.ownerId) && dirt.state.Value != HoeDirt.watered)
                     {
                         saverCrop.IncrementExtraDays();
                     }
