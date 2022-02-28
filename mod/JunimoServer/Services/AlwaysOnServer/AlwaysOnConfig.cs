@@ -13,12 +13,12 @@ namespace JunimoServer.Services.AlwaysOnServer
 
         public bool LockPlayerChests { get; set; } = true;
 
-        public int EggHuntCountDownConfig { get; set; } = 60;
-        public int FlowerDanceCountDownConfig { get; set; } = 60;
-        public int LuauSoupCountDownConfig { get; set; } = 60;
-        public int JellyDanceCountDownConfig { get; set; } = 60;
-        public int GrangeDisplayCountDownConfig { get; set; } = 60;
-        public int IceFishingCountDownConfig { get; set; } = 60;
+        public int EggHuntCountDownConfig { get; set; } = 300;
+        public int FlowerDanceCountDownConfig { get; set; } = 300;
+        public int LuauSoupCountDownConfig { get; set; } = 300;
+        public int JellyDanceCountDownConfig { get; set; } = 300;
+        public int GrangeDisplayCountDownConfig { get; set; } = 300;
+        public int IceFishingCountDownConfig { get; set; } = 300;
 
         public int EndOfDayTimeOut { get; set; } = 300;
         public int FairTimeOut { get; set; } = 1200;

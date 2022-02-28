@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using JunimoServer.Services.ChatCommands;
 using JunimoServer.Services.ServerOptim;
@@ -20,10 +21,10 @@ namespace JunimoServer.Services.AlwaysOnServer
 {
     public class AlwaysOnServer
     {
-
         private const string StartNowText = "Type !event to start now";
+
         /// <summary>The mod configuration from the player.</summary>
-        private AlwaysOnConfig Config;
+        private readonly AlwaysOnConfig Config = new AlwaysOnConfig();
 
         /// <summary>Whether the main player is currently being automated.</summary>
         private bool IsAutomating;
@@ -101,7 +102,6 @@ namespace JunimoServer.Services.AlwaysOnServer
             _chatCommandApi = chatCommandApi;
             _optimizer = optimizer;
             _disableRendering = disableRendering;
-            Config = helper.ReadConfig<AlwaysOnConfig>();
 
 
             helper.ConsoleCommands.Add("server", "Toggles headless 'auto mode' on/off", this.ToggleAutoMode);
@@ -209,11 +209,10 @@ namespace JunimoServer.Services.AlwaysOnServer
         private void TurnOffAutoMode()
         {
             IsAutomating = false;
-            Game1.warpFarmer("Farmhouse", 0, 0, false);
+            WarpToFarmhouse();
             _monitor.Log("Auto mode off!", LogLevel.Info);
 
             Game1.chatBox.addInfoMessage("The host has returned!");
-
             Game1.displayHUD = true;
             Game1.addHUDMessage(new HUDMessage("Auto Mode Off!", ""));
             if (_disableRendering)
@@ -224,9 +223,7 @@ namespace JunimoServer.Services.AlwaysOnServer
 
         private void TurnOnAutoMode()
         {
-            Config = _helper.ReadConfig<AlwaysOnConfig>();
             IsAutomating = true;
-
 
             _monitor.Log("Auto mode on!", LogLevel.Info);
             Game1.chatBox.addInfoMessage("The host is in automatic mode!");
@@ -235,7 +232,7 @@ namespace JunimoServer.Services.AlwaysOnServer
             Game1.addHUDMessage(new HUDMessage("Auto Mode On!", ""));
 
 
-            HideFarmer();
+            WarpToFarmhouse();
 
             if (_disableRendering)
             {
@@ -443,7 +440,6 @@ namespace JunimoServer.Services.AlwaysOnServer
                         _helper.SendPublicMessage(
                             $"The Dance of the Moonlight Jellies will begin in {chatJelly:0.#} minutes.");
                         _helper.SendPublicMessage(StartNowText);
-
                     }
 
                     if (jellyDanceCountDown == this.Config.JellyDanceCountDownConfig + 1)
@@ -498,7 +494,6 @@ namespace JunimoServer.Services.AlwaysOnServer
                     {
                         _helper.SendPublicMessage($"The Grange Judging will begin in {chatGrange:0.#} minutes.");
                         _helper.SendPublicMessage(StartNowText);
-
                     }
 
                     if (grangeDisplayCountDown == this.Config.GrangeDisplayCountDownConfig + 1)
@@ -549,7 +544,6 @@ namespace JunimoServer.Services.AlwaysOnServer
                     {
                         _helper.SendPublicMessage($"The Ice Fishing Contest will begin in {chatIceFish:0.#} minutes.");
                         _helper.SendPublicMessage(StartNowText);
-
                     }
 
                     if (iceFishingCountDown == this.Config.IceFishingCountDownConfig + 1)
@@ -689,6 +683,7 @@ namespace JunimoServer.Services.AlwaysOnServer
         {
             HandleAutoSleep();
             HandleAutoLeaveFestival();
+            HandleHidingFarmer();
 
             // lock player chests
             if (Config.LockPlayerChests)
@@ -745,6 +740,19 @@ namespace JunimoServer.Services.AlwaysOnServer
                 {
                     IsAutomating = false;
                 }
+            }
+        }
+
+        private void HandleHidingFarmer()
+        {
+            if (IsAutomating)
+            {
+                Game1.displayFarmer = false;
+            }
+            else
+            {
+                Game1.displayFarmer = true;
+
             }
         }
 
@@ -805,11 +813,11 @@ namespace JunimoServer.Services.AlwaysOnServer
         private void OnTimeChanged(object sender, TimeChangedEventArgs e)
         {
             if (!IsAutomating) return;
-            
+
             var currentTime = Game1.timeOfDay;
             var numPlayers = Game1.otherFarmers.Count;
             var currentDate = SDate.Now();
-            
+
             UpdateFestivalStatus();
 
             //handles various events that the host normally has to click through
@@ -918,17 +926,17 @@ namespace JunimoServer.Services.AlwaysOnServer
                 }
 
                 //Hide at start of day
-                if (currentTime is 600 or 610)
+                if (currentTime is 610)
                 {
-                    HideFarmer();
+                    WarpToFarmhouse();
                 }
-                
+
 
                 //get fishing rod (standard spam clicker will get through cutscene)
                 if (currentTime == 900 && !Game1.player.eventsSeen.Contains(739330))
                 {
                     Game1.player.increaseBackpackSize(1);
-                    Game1.warpFarmer("Beach", 50, 50, 1);
+                    Game1.warpFarmer("Beach", 44, 35, 1);
                 }
             }
         }
@@ -936,7 +944,7 @@ namespace JunimoServer.Services.AlwaysOnServer
         private void UpdateFestivalStatus()
         {
             if (Game1.otherFarmers.Count == 0) return;
-            
+
             var currentDate = SDate.Now();
 
             if (currentDate == eggFestival)
@@ -1169,7 +1177,7 @@ namespace JunimoServer.Services.AlwaysOnServer
 
         private void StartSleep()
         {
-            HideFarmer();
+            WarpToFarmhouse();
             _helper.Reflection.GetMethod(Game1.getLocationFromName("Farmhouse"), "startSleep").Invoke();
             Game1.displayHUD = true;
         }
@@ -1247,15 +1255,15 @@ namespace JunimoServer.Services.AlwaysOnServer
             Game1.activeClickableMenu = new ReadyCheckDialog("festivalEnd", true, who =>
             {
                 Game1.exitActiveMenu();
-                HideFarmer();
+                WarpToFarmhouse();
                 var isSpiritsEve = SDate.Now() == spiritsEve;
                 Game1.timeOfDay = isSpiritsEve ? 2400 : 2200;
             });
         }
 
-        private void HideFarmer()
+        private void WarpToFarmhouse()
         {
-            Game1.warpFarmer("Farm", 1, 1, false);
+            Game1.warpFarmer("Farmhouse", 0, 0, false);
         }
     }
 }

@@ -160,7 +160,7 @@ namespace JunimoServer
         {
             if (e.Button == SButton.Q)
             {
-                this.Monitor.Log($"{Constants.SaveFolderName}", LogLevel.Debug);
+                Monitor.Log($"{Game1.player.getTileLocation()}", LogLevel.Debug);
             }
         }
 
