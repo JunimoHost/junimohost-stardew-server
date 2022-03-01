@@ -61,34 +61,14 @@ namespace JunimoServer.Services.AlwaysOnServer
 
         private int winterFeastCountDown;
 
-        // Festivals
-        private static readonly SDate eggFestival = new SDate(13, "spring");
-        private static readonly SDate flowerDance = new SDate(24, "spring");
-        private static readonly SDate luau = new SDate(11, "summer");
-        private static readonly SDate danceOfJellies = new SDate(28, "summer");
-        private static readonly SDate stardewValleyFair = new SDate(16, "fall");
-        private static readonly SDate spiritsEve = new SDate(27, "fall");
-        private static readonly SDate festivalOfIce = new SDate(8, "winter");
-        private static readonly SDate feastOfWinterStar = new SDate(25, "winter");
-        private static readonly SDate grampasGhost = new SDate(1, "spring", 3);
 
-        private static readonly SDate[] Festivals =
-        {
-            eggFestival, flowerDance, luau, danceOfJellies, stardewValleyFair, spiritsEve, festivalOfIce,
-            feastOfWinterStar, grampasGhost
-        };
-        ///////////////////////////////////////////////////////
-
-
-        //variables for timeout reset code
-
+        //variables for timeout reset
         private int timeOutTicksForReset;
         private int festivalTicksForReset;
         private int shippingMenuTimeoutTicks;
 
 
         private readonly IModHelper _helper;
-        private readonly IChatCommandApi _chatCommandApi;
         private readonly IMonitor _monitor;
         private readonly ServerOptimizer _optimizer;
         private readonly bool _disableRendering;
@@ -99,7 +79,6 @@ namespace JunimoServer.Services.AlwaysOnServer
         {
             _helper = helper;
             _monitor = monitor;
-            _chatCommandApi = chatCommandApi;
             _optimizer = optimizer;
             _disableRendering = disableRendering;
 
@@ -118,7 +97,7 @@ namespace JunimoServer.Services.AlwaysOnServer
                 OnUnvalidatedUpdateTick; //used bc only thing that gets throug save window
             helper.Events.GameLoop.DayStarted += OnDayStarted;
 
-            _chatCommandApi.RegisterCommand("event", "Tries to start the current festival's event.", StartEvent);
+            chatCommandApi.RegisterCommand("event", "Tries to start the current festival's event.", StartEvent);
         }
 
         private void OnDayStarted(object sender, DayStartedEventArgs e)
@@ -607,8 +586,7 @@ namespace JunimoServer.Services.AlwaysOnServer
         private void PauseIfNobodyPresent()
         {
             var numPlayers = Game1.otherFarmers.Count;
-            var currentDate = SDate.Now();
-            var isFestivalDay = Festivals.Contains(currentDate);
+            var isFestivalDay = SDateHelper.IsFestivalToday();
 
             if (numPlayers >= 1)
             {
@@ -625,50 +603,48 @@ namespace JunimoServer.Services.AlwaysOnServer
 
         private void StartEvent(string[] args, ReceivedMessage msg)
         {
-            var currentDate = SDate.Now();
-
             if (Game1.CurrentEvent is not {isFestival: true})
             {
                 _helper.SendPublicMessage("Must be at festival to start the event.");
                 return;
             }
 
-            if (currentDate == eggFestival)
+            if (SDateHelper.IsEggFestivalToday())
             {
                 eventCommandUsed = true;
                 eggHuntAvailable = true;
             }
-            else if (currentDate == flowerDance)
+            else if (SDateHelper.IsFlowerDanceToday())
             {
                 eventCommandUsed = true;
                 flowerDanceAvailable = true;
             }
-            else if (currentDate == luau)
+            else if (SDateHelper.IsLuauToday())
             {
                 eventCommandUsed = true;
                 luauSoupAvailable = true;
             }
-            else if (currentDate == danceOfJellies)
+            else if (SDateHelper.IsDanceOfJelliesToday())
             {
                 eventCommandUsed = true;
                 jellyDanceAvailable = true;
             }
-            else if (currentDate == stardewValleyFair)
+            else if (SDateHelper.IsStardewValleyFairToday())
             {
                 eventCommandUsed = true;
                 grangeDisplayAvailable = true;
             }
-            else if (currentDate == spiritsEve)
+            else if (SDateHelper.IsSpiritsEveToday())
             {
                 eventCommandUsed = true;
                 goldenPumpkinAvailable = true;
             }
-            else if (currentDate == festivalOfIce)
+            else if (SDateHelper.IsFestivalOfIceToday())
             {
                 eventCommandUsed = true;
                 iceFishingAvailable = true;
             }
-            else if (currentDate == feastOfWinterStar)
+            else if (SDateHelper.IsFeastOfWinterStarToday())
             {
                 eventCommandUsed = true;
                 winterFeastAvailable = true;
@@ -751,7 +727,6 @@ namespace JunimoServer.Services.AlwaysOnServer
             else
             {
                 Game1.displayFarmer = true;
-
             }
         }
 
@@ -814,15 +789,11 @@ namespace JunimoServer.Services.AlwaysOnServer
             if (!IsAutomating) return;
 
             var currentTime = Game1.timeOfDay;
-            var numPlayers = Game1.otherFarmers.Count;
-            var currentDate = SDate.Now();
 
             UpdateFestivalStatus();
 
             //handles various events that the host normally has to click through
-            if (currentDate != grampasGhost && currentDate != eggFestival && currentDate != flowerDance &&
-                currentDate != luau && currentDate != danceOfJellies && currentDate != stardewValleyFair &&
-                currentDate != spiritsEve && currentDate != festivalOfIce && currentDate != feastOfWinterStar)
+            if (!SDateHelper.IsFestivalToday())
             {
                 if (currentTime == 620)
                 {
@@ -944,37 +915,35 @@ namespace JunimoServer.Services.AlwaysOnServer
         {
             if (Game1.otherFarmers.Count == 0) return;
 
-            var currentDate = SDate.Now();
-
-            if (currentDate == eggFestival)
+            if (SDateHelper.IsEggFestivalToday())
             {
                 EggFestival();
             }
-            else if (currentDate == flowerDance)
+            else if (SDateHelper.IsFlowerDanceToday())
             {
                 FlowerDance();
             }
-            else if (currentDate == luau)
+            else if (SDateHelper.IsLuauToday())
             {
                 Luau();
             }
-            else if (currentDate == danceOfJellies)
+            else if (SDateHelper.IsDanceOfJelliesToday())
             {
                 DanceOfTheMoonlightJellies();
             }
-            else if (currentDate == stardewValleyFair)
+            else if (SDateHelper.IsStardewValleyFairToday())
             {
                 StardewValleyFair();
             }
-            else if (currentDate == spiritsEve)
+            else if (SDateHelper.IsSpiritsEveToday())
             {
                 SpiritsEve();
             }
-            else if (currentDate == festivalOfIce)
+            else if (SDateHelper.IsFestivalOfIceToday())
             {
                 FestivalOfIce();
             }
-            else if (currentDate == feastOfWinterStar)
+            else if (SDateHelper.IsFeastOfWinterStarToday())
             {
                 FeastOfWinterStar();
             }
@@ -1207,11 +1176,8 @@ namespace JunimoServer.Services.AlwaysOnServer
         /// <param name="e">The event data.</param>
         private void OnUnvalidatedUpdateTick(object sender, UnvalidatedUpdateTickedEventArgs e)
         {
-            var currentDate = SDate.Now();
-
-
-            if (currentDate == danceOfJellies ||
-                currentDate == spiritsEve && this.Config.EndOfDayTimeOut != 0)
+            if (SDateHelper.IsDanceOfJelliesToday() ||
+                SDateHelper.IsSpiritsEveToday() && this.Config.EndOfDayTimeOut != 0)
             {
                 if (Game1.timeOfDay is >= 2400 or 600)
                 {
@@ -1255,8 +1221,7 @@ namespace JunimoServer.Services.AlwaysOnServer
             {
                 Game1.exitActiveMenu();
                 WarpToFarm();
-                var isSpiritsEve = SDate.Now() == spiritsEve;
-                Game1.timeOfDay = isSpiritsEve ? 2400 : 2200;
+                Game1.timeOfDay = SDateHelper.IsSpiritsEveToday() ? 2400 : 2200;
             });
         }
 
