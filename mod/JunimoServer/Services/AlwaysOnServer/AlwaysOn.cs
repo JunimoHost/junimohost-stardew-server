@@ -209,7 +209,7 @@ namespace JunimoServer.Services.AlwaysOnServer
         private void TurnOffAutoMode()
         {
             IsAutomating = false;
-            WarpToFarmhouse();
+            WarpToFarm();
             _monitor.Log("Auto mode off!", LogLevel.Info);
 
             Game1.chatBox.addInfoMessage("The host has returned!");
@@ -231,8 +231,7 @@ namespace JunimoServer.Services.AlwaysOnServer
             Game1.displayHUD = true;
             Game1.addHUDMessage(new HUDMessage("Auto Mode On!", ""));
 
-
-            WarpToFarmhouse();
+            WarpToFarm();
 
             if (_disableRendering)
             {
@@ -928,7 +927,7 @@ namespace JunimoServer.Services.AlwaysOnServer
                 //Hide at start of day
                 if (currentTime is 610)
                 {
-                    WarpToFarmhouse();
+                    WarpToFarm();
                 }
 
 
@@ -1177,7 +1176,7 @@ namespace JunimoServer.Services.AlwaysOnServer
 
         private void StartSleep()
         {
-            WarpToFarmhouse();
+            WarpToFarm();
             _helper.Reflection.GetMethod(Game1.getLocationFromName("Farmhouse"), "startSleep").Invoke();
             Game1.displayHUD = true;
         }
@@ -1255,15 +1254,15 @@ namespace JunimoServer.Services.AlwaysOnServer
             Game1.activeClickableMenu = new ReadyCheckDialog("festivalEnd", true, who =>
             {
                 Game1.exitActiveMenu();
-                WarpToFarmhouse();
+                WarpToFarm();
                 var isSpiritsEve = SDate.Now() == spiritsEve;
                 Game1.timeOfDay = isSpiritsEve ? 2400 : 2200;
             });
         }
 
-        private void WarpToFarmhouse()
+        private void WarpToFarm()
         {
-            Game1.warpFarmer("Farmhouse", 0, 0, false);
+            Game1.warpFarmer("Farm", 64, 15, false);
         }
     }
 }

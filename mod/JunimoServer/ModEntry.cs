@@ -11,6 +11,7 @@ using JunimoServer.Services.Commands;
 using JunimoServer.Services.CropSaver;
 using JunimoServer.Services.GameCreator;
 using JunimoServer.Services.GameLoader;
+using JunimoServer.Services.GameTweaks;
 using JunimoServer.Services.PersistentOption;
 using JunimoServer.Services.ServerOptim;
 using JunimoServer.Util;
@@ -47,6 +48,7 @@ namespace JunimoServer
             _gameLoaderService = new GameLoaderService(helper, Monitor);
             _gameCreatorService = new GameCreatorService(_gameLoaderService, options);
             _gameCreatorController = new GameCreatorController(Monitor, _gameCreatorService);
+            var gameTweaker = new GameTweaker(helper);
 
             CabinCommand.Register(helper, chatCommands, options, Monitor);
 
@@ -161,6 +163,8 @@ namespace JunimoServer
             if (e.Button == SButton.Q)
             {
                 Monitor.Log($"{Game1.player.getTileLocation()}", LogLevel.Debug);
+                Monitor.Log($"{Game1.player.team.farmhandsCanMoveBuildings.Value}", LogLevel.Debug);
+                Monitor.Log($"{Game1.activeClickableMenu.GetType().Name}", LogLevel.Debug);
             }
         }
 
