@@ -7,6 +7,9 @@ services:
     environment:
       - "DISPLAY_HEIGHT=800"
       - "DISPLAY_WIDTH=1280"
+      - "SERVER_ID=docker-test"
+      - "BACKUP_GCS_BUCKET=junimo-test-backups"
+      - "GOOGLE_APPLICATION_CREDENTIALS=/var/secrets/google"
 
     cpus: 0.25
     mem_limit: 1Gi
@@ -19,8 +22,9 @@ services:
       # Game
       - 24643:24642/udp
       - 8082:8081
+      - 8083:8080
 
     volumes:
-      # Saves go here now
-      - ./data:/config/xdg/config/StardewValley
       # - ./data/mods:/data/Stardew/Stardew Valley/Mods
+      - ./data:/config/xdg/config/StardewValley
+      - ./gcp-key.json:/var/secrets/google

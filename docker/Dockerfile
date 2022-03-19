@@ -1,6 +1,10 @@
 FROM jlesage/baseimage-gui:debian-10
 
 ENV APP_NAME="StardewValley"
+# root
+ENV USER_ID=0
+ENV GROUP_ID=0
+ENV TZ=America/New_York
 
 RUN apt-get update \
     && apt-get install -y \
@@ -9,23 +13,29 @@ RUN apt-get update \
 
 RUN mkdir -p /data/Stardew && \
     mkdir -p /data/nexus && \
-    wget https://storage.googleapis.com/junimo-public/SV155.tar.gz -qO /data/latest.tar.gz && \
+    wget https://storage.googleapis.com/junimo-public/SV156.tar.gz -qO /data/latest.tar.gz && \
     tar xf /data/latest.tar.gz -C /data/Stardew && \
     rm /data/latest.tar.gz 
 
 RUN wget https://github.com/Pathoschild/SMAPI/releases/download/3.13.4/SMAPI-3.13.4-installer.zip -qO /data/nexus.zip && \
     unzip /data/nexus.zip -d /data/nexus/ && \
-    /bin/bash -c "echo -e \"2\n\n\" | /data/nexus/SMAPI\ 3.13.4\ installer/internal/linux/SMAPI.Installer --install --game-path \"/data/Stardew/Stardew Valley\"" || :
+    /bin/bash -c "echo -e \"2\n\n\" | /data/nexus/SMAPI\ 3.13.4\ installer/internal/linux/SMAPI.Installer --install --game-path \"/data/Stardew/Stardew Valley\"" || : && \
+    rm -rf "/data/Stardew/Stardew Valley/Mods/SaveBackup"
 
 RUN APP_ICON_URL=https://stardewcommunitywiki.com/mediawiki/images/4/48/Fiddlehead_Fern.png && \
     install_app_icon.sh "$APP_ICON_URL"
 
-COPY scripts/ /opt/
-COPY ["mods", "/data/Stardew/Stardew Valley/Mods/"]
-
 RUN chmod +x /data/Stardew/Stardew\ Valley/StardewValley && \
     chmod -R 777 /data/Stardew/ && \
-    chown -R 1000:1000 /data/Stardew && \
-    chmod +x /opt/*.sh
+    chown -R 1000:1000 /data/Stardew
+
+COPY scripts/ /opt/
+RUN chmod +x /opt/*.sh
+
+COPY ["mods", "/data/Stardew/Stardew Valley/Mods/"]
+RUN chmod -R 777 /data/Stardew/Stardew\ Valley/Mods
+
+COPY game-daemon /opt
+RUN chmod +x /opt/game-daemon
 
 COPY docker-entrypoint.sh /startapp.sh

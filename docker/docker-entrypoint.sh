@@ -1,7 +1,6 @@
 #!/bin/bash
-export HOME=/config # not sure why possibly to due with where saves are placed
-
 /opt/tail-smapi-log.sh &
+/opt/game-daemon &
 
 export XAUTHORITY=~/.Xauthority
 TERM=
