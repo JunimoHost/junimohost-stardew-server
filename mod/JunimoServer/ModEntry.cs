@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using HarmonyLib;
 using JunimoServer.Controllers;
 using JunimoServer.Services.AlwaysOnServer;
+using JunimoServer.Services.Backup;
 using JunimoServer.Services.ChatCommands;
 using JunimoServer.Services.Commands;
 using JunimoServer.Services.CropSaver;
@@ -25,6 +27,7 @@ namespace JunimoServer
 {
     internal class ModEntry : Mod
     {
+        private static readonly string DaemonPort = Environment.GetEnvironmentVariable("DAEMON_HTTP_PORT") ?? "8080";
         private const bool DisableRendering = true;
 
         private GameCreatorService _gameCreatorService;
@@ -39,6 +42,8 @@ namespace JunimoServer
             Game1.options.pauseWhenOutOfFocus = false;
 
             var harmony = new Harmony(this.ModManifest.UniqueID);
+            var httpClient = new HttpClient();
+            httpClient.BaseAddress = new Uri($"http://localhost:{DaemonPort}");
 
             var options = new PersistentOptions(helper);
             var chatCommands = new ChatCommands(Monitor, harmony, helper);
@@ -48,6 +53,8 @@ namespace JunimoServer
             _gameLoaderService = new GameLoaderService(helper, Monitor);
             _gameCreatorService = new GameCreatorService(_gameLoaderService, options);
             _gameCreatorController = new GameCreatorController(Monitor, _gameCreatorService);
+            var backupService = new BackupService(httpClient, Monitor);
+            var backupScheduler = new BackupScheduler(helper, backupService, Monitor);
             var gameTweaker = new GameTweaker(helper);
 
             CabinCommand.Register(helper, chatCommands, options, Monitor);
