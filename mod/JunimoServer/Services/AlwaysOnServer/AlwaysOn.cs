@@ -106,6 +106,9 @@ namespace JunimoServer.Services.AlwaysOnServer
             {
                 _optimizer.DisableDrawing();
             }
+            
+            WarpToHidingSpot();
+
         }
 
 
@@ -188,7 +191,7 @@ namespace JunimoServer.Services.AlwaysOnServer
         private void TurnOffAutoMode()
         {
             IsAutomating = false;
-            WarpToFarm();
+            WarpToHidingSpot();
             _monitor.Log("Auto mode off!", LogLevel.Info);
 
             Game1.chatBox.addInfoMessage("The host has returned!");
@@ -210,7 +213,7 @@ namespace JunimoServer.Services.AlwaysOnServer
             Game1.displayHUD = true;
             Game1.addHUDMessage(new HUDMessage("Auto Mode On!", ""));
 
-            WarpToFarm();
+            // WarpToHidingSpot();
 
             if (_disableRendering)
             {
@@ -740,7 +743,7 @@ namespace JunimoServer.Services.AlwaysOnServer
 
             if (numberRequiredSleep - numReadySleep == 1)
             {
-                StartSleep();
+                Sleep();
             }
         }
 
@@ -894,12 +897,7 @@ namespace JunimoServer.Services.AlwaysOnServer
                         }
                     }
                 }
-
-                //Hide at start of day
-                if (currentTime is 610)
-                {
-                    WarpToFarm();
-                }
+                
 
 
                 //get fishing rod (standard spam clicker will get through cutscene)
@@ -1143,11 +1141,11 @@ namespace JunimoServer.Services.AlwaysOnServer
             }
         }
 
-        private void StartSleep()
+        private void Sleep()
         {
-            WarpToFarm();
+            Game1.warpFarmer("FarmHouse", 64, 15, false);
             _helper.Reflection.GetMethod(Game1.getLocationFromName("Farmhouse"), "startSleep").Invoke();
-            Game1.displayHUD = true;
+            WarpToHidingSpot();
         }
 
         /// <summary>Raised before the game begins writes data to the save file (except the initial save creation).</summary>
@@ -1220,12 +1218,12 @@ namespace JunimoServer.Services.AlwaysOnServer
             Game1.activeClickableMenu = new ReadyCheckDialog("festivalEnd", true, who =>
             {
                 Game1.exitActiveMenu();
-                WarpToFarm();
+                WarpToHidingSpot();
                 Game1.timeOfDay = SDateHelper.IsSpiritsEveToday() ? 2400 : 2200;
             });
         }
 
-        private void WarpToFarm()
+        private void WarpToHidingSpot()
         {
             Game1.warpFarmer("Farm", 64, 15, false);
         }
