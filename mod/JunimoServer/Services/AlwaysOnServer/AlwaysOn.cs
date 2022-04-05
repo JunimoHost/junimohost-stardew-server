@@ -61,6 +61,8 @@ namespace JunimoServer.Services.AlwaysOnServer
 
         private int winterFeastCountDown;
 
+        private bool doWarpRoutineToGetToNextDay = false;
+
 
         //variables for timeout reset
         private int timeOutTicksForReset;
@@ -96,8 +98,15 @@ namespace JunimoServer.Services.AlwaysOnServer
             helper.Events.Specialized.UnvalidatedUpdateTicked +=
                 OnUnvalidatedUpdateTick; //used bc only thing that gets throug save window
             helper.Events.GameLoop.DayStarted += OnDayStarted;
+            helper.Events.GameLoop.DayEnding += OnDayEnd;
 
             chatCommandApi.RegisterCommand("event", "Tries to start the current festival's event.", StartEvent);
+        }
+
+        private void OnDayEnd(object sender, DayEndingEventArgs e)
+        {
+            doWarpRoutineToGetToNextDay = false;
+            warpTickCounter = 0;
         }
 
         private void OnDayStarted(object sender, DayStartedEventArgs e)
@@ -106,9 +115,9 @@ namespace JunimoServer.Services.AlwaysOnServer
             {
                 _optimizer.DisableDrawing();
             }
-            
-            WarpToHidingSpot();
 
+
+            WarpToHidingSpot();
         }
 
 
@@ -254,6 +263,7 @@ namespace JunimoServer.Services.AlwaysOnServer
             else
                 Game1.paused = false;
 
+            HandleWarpRoutine();
 
             //left click menu spammer and event skipper to get through random events happening
             //also moves player around, this seems to free host from random bugs sometimes
@@ -897,7 +907,6 @@ namespace JunimoServer.Services.AlwaysOnServer
                         }
                     }
                 }
-                
 
 
                 //get fishing rod (standard spam clicker will get through cutscene)
@@ -1143,10 +1152,35 @@ namespace JunimoServer.Services.AlwaysOnServer
 
         private void Sleep()
         {
-            Game1.warpFarmer("FarmHouse", 64, 15, false);
+            _monitor.Log("Called StartSleep");
             _helper.Reflection.GetMethod(Game1.getLocationFromName("Farmhouse"), "startSleep").Invoke();
-            WarpToHidingSpot();
+
+            doWarpRoutineToGetToNextDay = true;
         }
+
+
+        private int warpTickCounter = 0;
+
+        private void HandleWarpRoutine()
+        {
+            if (!doWarpRoutineToGetToNextDay)
+                return;
+
+            _monitor.Log("attempting to warp to next day");
+
+
+            if (warpTickCounter % 10 == 1)
+            {
+                Game1.warpFarmer("FarmHouse", 64, 15, false);
+            }
+            else if (warpTickCounter % 10 == 5)
+            {
+                WarpToHidingSpot();
+            }
+
+            warpTickCounter++;
+        }
+
 
         /// <summary>Raised before the game begins writes data to the save file (except the initial save creation).</summary>
         /// <param name="sender">The event sender.</param>
