@@ -9,9 +9,10 @@ services:
       - "DISPLAY_WIDTH=1280"
       - "SERVER_ID=docker-test"
       - "BACKUP_GCS_BUCKET=junimo-test-backups"
-      - "GOOGLE_APPLICATION_CREDENTIALS=/var/secrets/google"
+      - "GOOGLE_APPLICATION_CREDENTIALS=/etc/gcp/stardew-sa.json"
+      - "NO_BACKEND=true"
 
-    cpus: 0.25
+    cpus: 0.175
     mem_limit: 1Gi
 
     ports:
@@ -27,4 +28,4 @@ services:
     volumes:
       # - ./data/mods:/data/Stardew/Stardew Valley/Mods
       - ./data:/config/xdg/config/StardewValley
-      - ./gcp-key.json:/var/secrets/google
+      - ./stardew-sa.json:/etc/gcp/stardew-sa.json
