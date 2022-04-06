@@ -1,6 +1,9 @@
 #!/bin/bash
-/opt/tail-smapi-log.sh &
 /opt/game-daemon &
+
+bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localhost:8080/startup)" != "200" ]]; do sleep 5; done'
+
+/opt/tail-smapi-log.sh &
 
 # wait until game-daemon says its ok to start stardew
 

@@ -9,7 +9,7 @@ ENV TZ=America/New_York
 RUN apt-get update \
     && apt-get install -y \
     wget unzip tar strace mono-complete xterm \
-    gettext-base jq netcat procps
+    gettext-base jq netcat procps curl
 
 RUN mkdir -p /data/Stardew && \
     mkdir -p /data/nexus && \
@@ -21,9 +21,6 @@ RUN wget https://github.com/Pathoschild/SMAPI/releases/download/3.13.4/SMAPI-3.1
     unzip /data/nexus.zip -d /data/nexus/ && \
     /bin/bash -c "echo -e \"2\n\n\" | /data/nexus/SMAPI\ 3.13.4\ installer/internal/linux/SMAPI.Installer --install --game-path \"/data/Stardew/Stardew Valley\"" || : && \
     rm -rf "/data/Stardew/Stardew Valley/Mods/SaveBackup"
-
-RUN APP_ICON_URL=https://stardewcommunitywiki.com/mediawiki/images/4/48/Fiddlehead_Fern.png && \
-    install_app_icon.sh "$APP_ICON_URL"
 
 RUN chmod +x /data/Stardew/Stardew\ Valley/StardewValley && \
     chmod -R 777 /data/Stardew/ && \
