@@ -1,7 +1,7 @@
 FROM jlesage/baseimage-gui:debian-10
 
 ENV APP_NAME="StardewValley"
-# root
+# set user to root
 ENV USER_ID=0
 ENV GROUP_ID=0
 ENV TZ=America/New_York
@@ -11,15 +11,16 @@ RUN apt-get update \
     wget unzip tar strace mono-complete xterm \
     gettext-base jq netcat procps curl
 
+ARG STARDEW_DOWNLOAD_URL=https://storage.googleapis.com/junimo-public/SV156.tar.gz
 RUN mkdir -p /data/Stardew && \
     mkdir -p /data/nexus && \
-    wget https://storage.googleapis.com/junimo-public/SV156.tar.gz -qO /data/latest.tar.gz && \
+    wget $STARDEW_DOWNLOAD_URL -qO /data/latest.tar.gz && \
     tar xf /data/latest.tar.gz -C /data/Stardew && \
     rm /data/latest.tar.gz 
 
-RUN wget https://github.com/Pathoschild/SMAPI/releases/download/3.13.4/SMAPI-3.13.4-installer.zip -qO /data/nexus.zip && \
+RUN wget https://github.com/Pathoschild/SMAPI/releases/download/3.14.4/SMAPI-3.14.4-installer.zip -qO /data/nexus.zip && \
     unzip /data/nexus.zip -d /data/nexus/ && \
-    /bin/bash -c "echo -e \"2\n\n\" | /data/nexus/SMAPI\ 3.13.4\ installer/internal/linux/SMAPI.Installer --install --game-path \"/data/Stardew/Stardew Valley\"" || : && \
+    /bin/bash -c "echo -e \"2\n\n\" | /data/nexus/SMAPI\ 3.14.4\ installer/internal/linux/SMAPI.Installer --install --game-path \"/data/Stardew/Stardew Valley\"" || : && \
     rm -rf "/data/Stardew/Stardew Valley/Mods/SaveBackup"
 
 RUN chmod +x /data/Stardew/Stardew\ Valley/StardewValley && \
