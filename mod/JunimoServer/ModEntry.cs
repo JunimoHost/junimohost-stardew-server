@@ -51,7 +51,7 @@ namespace JunimoServer
             _serverOptimizer = new ServerOptimizer(harmony, Monitor);
             var alwaysOnServer = new AlwaysOnServer(helper, Monitor, chatCommands, _serverOptimizer, DisableRendering);
             _gameLoaderService = new GameLoaderService(helper, Monitor);
-            _gameCreatorService = new GameCreatorService(_gameLoaderService, options);
+            _gameCreatorService = new GameCreatorService(_gameLoaderService, options, httpClient, Monitor);
             _gameCreatorController = new GameCreatorController(Monitor, _gameCreatorService);
             var backupService = new BackupService(httpClient, Monitor);
             var backupScheduler = new BackupScheduler(helper, backupService, Monitor);
@@ -70,6 +70,10 @@ namespace JunimoServer
             HttpServer.ListenAsync(8081, cts.Token, OnHttp);
 
             Monitor.Log("REST API has started: http://localhost:8081", LogLevel.Info);
+            
+            Monitor.Log("Fetching Config from Daemon", LogLevel.Info);
+
+            _gameCreatorService.FetchConfigFromDaemonAndCreateGame();
 
 
             //GRPCGameManagerService gameManagerService = new GRPCGameManagerService(gameCreator, gameLoader, Monitor);

@@ -1,4 +1,7 @@
-﻿using System.Threading;
+﻿using System;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading;
 using JunimoServer.Services.GameLoader;
 using JunimoServer.Services.PersistentOption;
 using Microsoft.Xna.Framework;
@@ -10,15 +13,34 @@ namespace JunimoServer.Services.GameCreator
     class GameCreatorService
     {
         private readonly GameLoaderService _gameLoader;
+        private readonly HttpClient _httpClient;
         private static readonly Mutex CreateGameMutex = new Mutex();
         private readonly PersistentOptions _options;
+        private readonly IMonitor _monitor;
 
         public bool GameIsCreating { get; private set; }
 
-        public GameCreatorService(GameLoaderService gameLoader, PersistentOptions options)
+        public GameCreatorService(GameLoaderService gameLoader, PersistentOptions options, HttpClient httpClient, IMonitor monitor)
         {
             _options = options;
             _gameLoader = gameLoader;
+            _httpClient = httpClient;
+            _monitor = monitor;
+        }
+
+        public async void FetchConfigFromDaemonAndCreateGame()
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync("/config");
+                var config = response.Content.ReadFromJsonAsync<NewGameConfig>().Result;
+                Monitor.Log("Received config: " + config, LogLevel.Info);
+                CreateNewGame(config);
+            }
+            catch (Exception e)
+            {
+                _monitor.Log(e.ToString(), LogLevel.Error);
+            }
         }
 
         public void CreateNewGame(NewGameConfig config)
