@@ -70,11 +70,6 @@ namespace JunimoServer
             HttpServer.ListenAsync(8081, cts.Token, OnHttp);
 
             Monitor.Log("REST API has started: http://localhost:8081", LogLevel.Info);
-            
-            Monitor.Log("Fetching Config from Daemon", LogLevel.Info);
-
-            _gameCreatorService.FetchConfigFromDaemonAndCreateGame();
-
 
             //GRPCGameManagerService gameManagerService = new GRPCGameManagerService(gameCreator, gameLoader, Monitor);
             ////ReflectionServiceImpl reflectionServiceImpl = new ReflectionServiceImpl(GameManagerService.Descriptor);
@@ -193,6 +188,11 @@ namespace JunimoServer
             if (_gameLoaderService.HasLoadableSave())
             {
                 _gameLoaderService.LoadSave();
+            }
+            else
+            {
+                Monitor.Log("Fetching Config from Daemon", LogLevel.Info);
+                _gameCreatorService.FetchConfigFromDaemonAndCreateGame();
             }
         }
     }
