@@ -2,3 +2,8 @@ data
 node_modules
 gcp-key.json
 stardew-sa.json
+bin
+.env
+.env.production
+cmd/daemon/__debug_bin.exe
+.idea

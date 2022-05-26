@@ -1,0 +1,25 @@
+on: [push]
+
+env:
+  PROJECT_ID: ${{ secrets.GKE_PROJECT }}
+
+jobs:
+  setup-build-publish:
+    name: Setup, Build, Publish
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - uses: google-github-actions/setup-gcloud@master
+        with:
+          service_account_key: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+          project_id: ${{ secrets.GKE_PROJECT }}
+
+      - run: |-
+          gcloud --quiet auth configure-docker
+
+      - name: Build and Publish
+        run: |-
+          make push
