@@ -2,9 +2,11 @@
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading;
+using JunimoServer.Services.Daemon;
 using JunimoServer.Services.GameLoader;
 using JunimoServer.Services.PersistentOption;
 using Microsoft.Xna.Framework;
+using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Menus;
 
@@ -12,30 +14,40 @@ namespace JunimoServer.Services.GameCreator
 {
     class GameCreatorService
     {
+        private readonly DaemonService _daemonService;
         private readonly GameLoaderService _gameLoader;
-        private readonly HttpClient _httpClient;
         private static readonly Mutex CreateGameMutex = new Mutex();
         private readonly PersistentOptions _options;
         private readonly IMonitor _monitor;
 
         public bool GameIsCreating { get; private set; }
 
-        public GameCreatorService(GameLoaderService gameLoader, PersistentOptions options, HttpClient httpClient, IMonitor monitor)
+        public GameCreatorService(GameLoaderService gameLoader, PersistentOptions options, IMonitor monitor,
+            DaemonService daemonService)
         {
+            _daemonService = daemonService;
             _options = options;
             _gameLoader = gameLoader;
-            _httpClient = httpClient;
             _monitor = monitor;
         }
 
-        public async void FetchConfigFromDaemonAndCreateGame()
+        public async void CreateNewGameFromDaemonConfig()
         {
             try
             {
-                var response = await _httpClient.GetAsync("/config");
-                var config = response.Content.ReadFromJsonAsync<NewGameConfig>().Result;
-                Monitor.Log("Received config: " + config, LogLevel.Info);
+                var config = await _daemonService.GetConfig();
                 CreateNewGame(config);
+            }
+            catch (Exception e)
+            {
+                _monitor.Log(e.ToString(), LogLevel.Error);
+                await _daemonService.UpdateNotConnectableStatus();
+                return;
+            }
+
+            try
+            {
+                await _daemonService.UpdateConnectableStatus();
             }
             catch (Exception e)
             {
@@ -43,7 +55,7 @@ namespace JunimoServer.Services.GameCreator
             }
         }
 
-        public void CreateNewGame(NewGameConfig config)
+        private void CreateNewGame(NewGameConfig config)
         {
             CreateGameMutex.WaitOne(); //prevent trying to start new game while in the middle of creating a game
             GameIsCreating = true;
@@ -73,10 +85,11 @@ namespace JunimoServer.Services.GameCreator
 
             Game1.multiplayerMode = 2; // multiplayer enabled
 
-            if (Game1.activeClickableMenu is IClickableMenu menu && menu != null)
-            {
-                menu.exitThisMenuNoSound();
-            }
+            // May not be needed
+            // if (Game1.activeClickableMenu is IClickableMenu menu && menu != null)
+            // {
+            //     menu.exitThisMenuNoSound();
+            // }
 
             // From TitleMenu.createdNewCharacter
             Game1.loadForNewGame(false);

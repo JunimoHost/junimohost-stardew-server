@@ -5,12 +5,12 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using HarmonyLib;
-using JunimoServer.Controllers;
 using JunimoServer.Services.AlwaysOnServer;
 using JunimoServer.Services.Backup;
 using JunimoServer.Services.ChatCommands;
 using JunimoServer.Services.Commands;
 using JunimoServer.Services.CropSaver;
+using JunimoServer.Services.Daemon;
 using JunimoServer.Services.GameCreator;
 using JunimoServer.Services.GameLoader;
 using JunimoServer.Services.GameTweaks;
@@ -31,7 +31,6 @@ namespace JunimoServer
         private const bool DisableRendering = true;
 
         private GameCreatorService _gameCreatorService;
-        private GameCreatorController _gameCreatorController;
         private GameLoaderService _gameLoaderService;
         private ServerOptimizer _serverOptimizer;
         private bool _titleLaunched = false;
@@ -51,8 +50,8 @@ namespace JunimoServer
             _serverOptimizer = new ServerOptimizer(harmony, Monitor);
             var alwaysOnServer = new AlwaysOnServer(helper, Monitor, chatCommands, _serverOptimizer, DisableRendering);
             _gameLoaderService = new GameLoaderService(helper, Monitor);
-            _gameCreatorService = new GameCreatorService(_gameLoaderService, options, httpClient, Monitor);
-            _gameCreatorController = new GameCreatorController(Monitor, _gameCreatorService);
+            var daemonService = new DaemonService(httpClient, Monitor);
+            _gameCreatorService = new GameCreatorService(_gameLoaderService, options, Monitor, daemonService);
             var backupService = new BackupService(httpClient, Monitor);
             var backupScheduler = new BackupScheduler(helper, backupService, Monitor);
             var gameTweaker = new GameTweaker(helper);
@@ -96,11 +95,13 @@ namespace JunimoServer
         private void ConditionallySendWelcomeMessage()
         {
             if (Helper.GetCurrentNumCabins() > 1 || _sentWelcomeMessage) return;
-            Helper.SendPublicMessage("Welcome to your new server! Thank you for supporting us.");
+            Helper.SendPublicMessage("!cabin");
+            Helper.SendPublicMessage("Type !cabin to build a cabin. This will allow more people to join.");
+            
             Helper.SendPublicMessage("");
-            Helper.SendPublicMessage(
-                "Type !cabin to build a cabin to the right of your player. This will allow friends to join quickly.");
-            Helper.SendPublicMessage("Type !help for more information on commands.");
+            
+            Helper.SendPublicMessage("!help");
+            Helper.SendPublicMessage("Type !help for more info.");
             _sentWelcomeMessage = true;
         }
 
@@ -109,21 +110,6 @@ namespace JunimoServer
             try
             {
                 Dictionary<string, string> queryArgs = new Dictionary<string, string>();
-
-                if (rq.HttpMethod == "POST" && rq.Url.PathAndQuery.TryMatch("/game", queryArgs))
-                {
-                    string body = rq.ParseBody();
-                    if (body != null)
-                    {
-                        res.StatusCode = 200;
-                        res.AsText("Creating Game!");
-                        _gameCreatorController.CreateGame(body);
-                    }
-                    else
-                    {
-                        res.AsText("No body");
-                    }
-                }
 
                 if (rq.HttpMethod == "GET" && rq.Url.PathAndQuery.TryMatch("/game/status", queryArgs))
                 {
@@ -191,8 +177,7 @@ namespace JunimoServer
             }
             else
             {
-                Monitor.Log("Fetching Config from Daemon", LogLevel.Info);
-                _gameCreatorService.FetchConfigFromDaemonAndCreateGame();
+                _gameCreatorService.CreateNewGameFromDaemonConfig();
             }
         }
     }

@@ -11,4 +11,8 @@
 		<PackageReference Include="MimeTypesMap" Version="1.0.8" />
 		<PackageReference Include="Pathoschild.Stardew.ModBuildConfig" Version="4.0.0" />
 	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Controllers" />
+	</ItemGroup>
 </Project>
