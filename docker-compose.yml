@@ -12,7 +12,7 @@ services:
       - "GOOGLE_APPLICATION_CREDENTIALS=/etc/gcp/stardew-sa.json"
       - "NO_BACKEND=true"
 
-    cpus: 0.175
+    cpus: 0.4
     mem_limit: 1Gi
 
     ports:

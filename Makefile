@@ -1,4 +1,4 @@
-VERSION=v0.11.9
+VERSION=v0.13.1
 
 local:
 	GOOS=linux GOARCH=amd64 go build -o ./docker/game-daemon ./cmd/daemon/daemon.go
