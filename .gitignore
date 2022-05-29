@@ -3,3 +3,8 @@ node_modules
 gcp-key.json
 stardew-sa.json
 testmods
+bin
+.env
+.env.production
+cmd/daemon/__debug_bin.exe
+.idea
