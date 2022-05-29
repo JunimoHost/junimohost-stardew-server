@@ -1,4 +1,4 @@
-VERSION=v0.14.0
+VERSION=v0.14.2
 
 build:
 	docker build -t gcr.io/junimo-host/stardew-base:$(VERSION) ./docker/
