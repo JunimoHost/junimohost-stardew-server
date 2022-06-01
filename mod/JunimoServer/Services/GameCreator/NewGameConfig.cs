@@ -22,5 +22,10 @@ namespace JunimoServer.Services.GameCreator
         //    };
         //}
 
+        public override string ToString()
+        {
+            return
+                $"{nameof(WhichFarm)}: {WhichFarm}, {nameof(UseSeparateWallets)}: {UseSeparateWallets}, {nameof(StartingCabins)}: {StartingCabins}, {nameof(CatPerson)}: {CatPerson}, {nameof(FarmName)}: {FarmName}, {nameof(MaxPlayers)}: {MaxPlayers}";
+        }
     }
 }

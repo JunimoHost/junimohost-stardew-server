@@ -1,7 +1,12 @@
-﻿using System.Threading;
+﻿using System;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading;
+using JunimoServer.Services.Daemon;
 using JunimoServer.Services.GameLoader;
 using JunimoServer.Services.PersistentOption;
 using Microsoft.Xna.Framework;
+using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Menus;
 
@@ -9,19 +14,53 @@ namespace JunimoServer.Services.GameCreator
 {
     class GameCreatorService
     {
+        private readonly DaemonService _daemonService;
         private readonly GameLoaderService _gameLoader;
         private static readonly Mutex CreateGameMutex = new Mutex();
         private readonly PersistentOptions _options;
+        private readonly IMonitor _monitor;
 
         public bool GameIsCreating { get; private set; }
 
-        public GameCreatorService(GameLoaderService gameLoader, PersistentOptions options)
+        public GameCreatorService(GameLoaderService gameLoader, PersistentOptions options, IMonitor monitor,
+            DaemonService daemonService)
         {
+            _daemonService = daemonService;
             _options = options;
             _gameLoader = gameLoader;
+            _monitor = monitor;
         }
 
-        public void CreateNewGame(NewGameConfig config)
+        public void CreateNewGameFromDaemonConfig()
+        {
+            try
+            {
+                var configTask = _daemonService.GetConfig();
+                configTask.Wait();
+                var config = configTask.Result;
+                
+                CreateNewGame(config);
+            }
+            catch (Exception e)
+            {
+                _monitor.Log(e.ToString(), LogLevel.Error);
+                var updateTask = _daemonService.UpdateNotConnectableStatus();
+                updateTask.Wait();
+                return;
+            }
+
+            try
+            {
+                var updateTask = _daemonService.UpdateConnectableStatus();
+                updateTask.Wait();
+            }
+            catch (Exception e)
+            {
+                _monitor.Log(e.ToString(), LogLevel.Error);
+            }
+        }
+
+        private void CreateNewGame(NewGameConfig config)
         {
             CreateGameMutex.WaitOne(); //prevent trying to start new game while in the middle of creating a game
             GameIsCreating = true;
@@ -51,10 +90,11 @@ namespace JunimoServer.Services.GameCreator
 
             Game1.multiplayerMode = 2; // multiplayer enabled
 
-            if (Game1.activeClickableMenu is IClickableMenu menu && menu != null)
-            {
-                menu.exitThisMenuNoSound();
-            }
+            // May not be needed
+            // if (Game1.activeClickableMenu is IClickableMenu menu && menu != null)
+            // {
+            //     menu.exitThisMenuNoSound();
+            // }
 
             // From TitleMenu.createdNewCharacter
             Game1.loadForNewGame(false);
