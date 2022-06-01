@@ -28,7 +28,7 @@ namespace JunimoServer
     internal class ModEntry : Mod
     {
         private static readonly string DaemonPort = Environment.GetEnvironmentVariable("DAEMON_HTTP_PORT") ?? "8080";
-        private const bool DisableRendering = false;
+        private const bool DisableRendering = true;
 
         private GameCreatorService _gameCreatorService;
         private GameLoaderService _gameLoaderService;
