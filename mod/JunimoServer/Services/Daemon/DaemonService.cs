@@ -31,7 +31,7 @@ namespace JunimoServer.Services.Daemon
             var response = await _httpClient.GetAsync("/config");
             var config = await response.Content.ReadFromJsonAsync<NewGameConfig>();
 
-            _monitor.Log("Received config: " + config, LogLevel.Info);
+            _monitor.Log($"Received config: {config}", LogLevel.Info);
             return config;
         }
 

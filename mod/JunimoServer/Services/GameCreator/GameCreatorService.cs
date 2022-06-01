@@ -31,23 +31,28 @@ namespace JunimoServer.Services.GameCreator
             _monitor = monitor;
         }
 
-        public async void CreateNewGameFromDaemonConfig()
+        public void CreateNewGameFromDaemonConfig()
         {
             try
             {
-                var config = await _daemonService.GetConfig();
+                var configTask = _daemonService.GetConfig();
+                configTask.Wait();
+                var config = configTask.Result;
+                
                 CreateNewGame(config);
             }
             catch (Exception e)
             {
                 _monitor.Log(e.ToString(), LogLevel.Error);
-                await _daemonService.UpdateNotConnectableStatus();
+                var updateTask = _daemonService.UpdateNotConnectableStatus();
+                updateTask.Wait();
                 return;
             }
 
             try
             {
-                await _daemonService.UpdateConnectableStatus();
+                var updateTask = _daemonService.UpdateConnectableStatus();
+                updateTask.Wait();
             }
             catch (Exception e)
             {
