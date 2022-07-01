@@ -18,9 +18,9 @@ RUN mkdir -p /data/Stardew && \
     tar xf /data/latest.tar.gz -C /data/Stardew && \
     rm /data/latest.tar.gz 
 
-RUN wget https://github.com/Pathoschild/SMAPI/releases/download/3.14.6/SMAPI-3.14.6-installer.zip -qO /data/nexus.zip && \
+RUN wget https://github.com/Pathoschild/SMAPI/releases/download/3.15.0/SMAPI-3.15.0-installer.zip -qO /data/nexus.zip && \
     unzip /data/nexus.zip -d /data/nexus/ && \
-    /bin/bash -c "echo -e \"2\n\n\" | /data/nexus/SMAPI\ 3.14.6\ installer/internal/linux/SMAPI.Installer --install --game-path \"/data/Stardew/Stardew Valley\"" || : && \
+    /bin/bash -c "echo -e \"2\n\n\" | /data/nexus/SMAPI\ 3.15.0\ installer/internal/linux/SMAPI.Installer --install --game-path \"/data/Stardew/Stardew Valley\"" || : && \
     rm -rf "/data/Stardew/Stardew Valley/Mods/SaveBackup"
 
 RUN chmod +x /data/Stardew/Stardew\ Valley/StardewValley && \
