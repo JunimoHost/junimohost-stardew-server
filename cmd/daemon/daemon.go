@@ -1,8 +1,12 @@
 package main
 
 import (
-	"cloud.google.com/go/storage"
 	"context"
+	"os"
+	"os/signal"
+	"syscall"
+
+	"cloud.google.com/go/storage"
 	"github.com/gin-gonic/gin"
 	pbsm "github.com/junimohost/game-daemon/genproto/servermanager/v1"
 	pbsd "github.com/junimohost/game-daemon/genproto/stardewdaemon/v1"
@@ -13,9 +17,6 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"os"
-	"os/signal"
-	"syscall"
 )
 
 func main() {
@@ -63,7 +64,7 @@ func main() {
 
 	backupController.AddRoutes(ginServer)
 
-	startupService := startup.NewService(storageClient, backupService, stardewDaemonServiceClient, serverManagerServiceClient, serverID)
+	startupService := startup.NewService(storageClient, backupService, stardewDaemonServiceClient, serverManagerServiceClient, serverID, backendAvailable)
 	startupController := startup.NewController(startupService)
 
 	startupController.AddRoutes(ginServer)

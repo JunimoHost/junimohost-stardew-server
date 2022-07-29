@@ -3,10 +3,14 @@ package startup
 import (
 	"archive/zip"
 	"bufio"
-	"cloud.google.com/go/storage"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"os"
+	"sync"
+
+	"cloud.google.com/go/storage"
 	pbsm "github.com/junimohost/game-daemon/genproto/servermanager/v1"
 	pbsd "github.com/junimohost/game-daemon/genproto/stardewdaemon/v1"
 	"github.com/junimohost/game-daemon/internal/backup"
@@ -14,9 +18,6 @@ import (
 	"github.com/junimohost/game-daemon/internal/zips"
 	"github.com/junimohost/game-daemon/pkg/functional"
 	"go.uber.org/zap"
-	"io"
-	"os"
-	"sync"
 )
 
 const (
@@ -45,6 +46,7 @@ type modVersionPathDestination struct {
 }
 
 type Service struct {
+	backendAvailable      bool
 	startupScriptFinished bool
 	config                pbsm.GameConfig
 
@@ -55,8 +57,15 @@ type Service struct {
 	serverId            string
 }
 
-func NewService(storageClient *storage.Client, backupService *backup.Service, stardewDaemonClient pbsd.StardewDaemonServiceClient, serverManagerClient pbsm.ServerManagerServiceClient, serverId string) *Service {
+func NewService(
+	storageClient *storage.Client,
+	backupService *backup.Service,
+	stardewDaemonClient pbsd.StardewDaemonServiceClient,
+	serverManagerClient pbsm.ServerManagerServiceClient,
+	serverId string,
+	backendAvailable bool) *Service {
 	return &Service{
+		backendAvailable:      backendAvailable,
 		storageClient:         storageClient,
 		backupService:         backupService,
 		stardewDaemonClient:   stardewDaemonClient,
@@ -258,6 +267,9 @@ func bufferedWriteFromGcsToFile(gcsReader *storage.Reader, fileName string) erro
 }
 
 func (s *Service) IsStartupScriptFinished() bool {
+	if !s.backendAvailable {
+		return true
+	}
 	return s.startupScriptFinished
 }
 

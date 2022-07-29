@@ -8,3 +8,7 @@ build:
 
 push: build
 	docker push gcr.io/junimo-host/stardew-base:$(VERSION)
+
+daemon_windows:
+	set GOOS=linux
+	go build -o ./docker/game-daemon ./cmd/daemon/daemon.go
