@@ -9,4 +9,6 @@ bin
 cmd/daemon/__debug_bin.exe
 .idea
 docker/game-daemon
+docker/mods
 .DS_Store
+build
