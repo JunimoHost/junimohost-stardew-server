@@ -10,7 +10,7 @@ clean:
 
 docker/mods/JunimoServer: $(shell find mod -type f)
 ifeq ($(CI), true)
-	cd mod && dotnet build -o ./build --configuration Release "/p:EnableModZip=false;EnableModDeploy=false;GamePath=/home/runner/work/junimo-game/junimo-game/Stardew Valley"
+	cd mod && dotnet build -o ./build --configuration Release "/p:EnableModZip=false;EnableModDeploy=false;GamePath=/home/runner/work/junimohost-stardew-server/junimohost-stardew-server/Stardew Valley"
 else
 	cd mod && dotnet build -o ./build --configuration Release "/p:EnableModZip=false;EnableModDeploy=false"
 endif
