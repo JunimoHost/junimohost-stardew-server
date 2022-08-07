@@ -1,7 +1,7 @@
 VERSION=v0.15.0-stress
 
 mod:
-	dotnet build -o ./out --configuration Release "/p:EnableModZip=false"
+	cd mod && dotnet build -o ../ --configuration Release "/p:EnableModZip=false"
 
 docker/game-daemon: $(shell find daemon -type f)
 	cd daemon && GOOS=linux GOARCH=amd64 go build -o ../docker/game-daemon ./cmd/daemon/daemon.go
