@@ -8,3 +8,5 @@ bin
 .env.production
 cmd/daemon/__debug_bin.exe
 .idea
+docker/game-daemon
+.DS_Store
