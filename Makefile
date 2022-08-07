@@ -9,7 +9,11 @@ clean:
 	rm ./docker/game-daemon
 
 docker/mods/JunimoServer: $(shell find mod -type f)
+ifeq ($(CI), true)
+	cd mod && dotnet build -o ./build --configuration Release "/p:EnableModZip=false;EnableModDeploy=false;GamePath=/home/runner/work/junimo-game/junimo-game/Stardew Valley"
+else
 	cd mod && dotnet build -o ./build --configuration Release "/p:EnableModZip=false;EnableModDeploy=false"
+endif
 	mkdir -p ./docker/mods/JunimoServer
 	cp ./mod/build/JunimoServer.dll ./mod/build/JunimoServer.pdb ./mod/build/MimeTypesMap.dll ./mod/JunimoServer/manifest.json ./docker/mods/JunimoServer
 
