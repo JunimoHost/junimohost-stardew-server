@@ -8,8 +8,7 @@ ENV TZ=America/New_York
 
 RUN apt-get update \
     && apt-get install -y \
-    wget unzip tar strace mono-complete xterm \
-    gettext-base jq netcat procps curl
+    wget unzip tar curl pulseaudio
 
 ARG STARDEW_DOWNLOAD_URL=https://storage.googleapis.com/junimo-public/SV156.tar.gz
 RUN mkdir -p /data/Stardew && \
@@ -26,9 +25,6 @@ RUN wget https://github.com/Pathoschild/SMAPI/releases/download/3.15.1/SMAPI-3.1
 RUN chmod +x /data/Stardew/Stardew\ Valley/StardewValley && \
     chmod -R 777 /data/Stardew/ && \
     chown -R 1000:1000 /data/Stardew
-
-COPY scripts/ /opt/
-RUN chmod +x /opt/*.sh
 
 COPY ["mods", "/data/Stardew/Stardew Valley/Mods/"]
 RUN chmod -R 777 /data/Stardew/Stardew\ Valley/Mods
