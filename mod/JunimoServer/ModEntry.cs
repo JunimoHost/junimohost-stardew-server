@@ -5,12 +5,15 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using HarmonyLib;
+using JunimoServer.Services;
 using JunimoServer.Services.AlwaysOnServer;
 using JunimoServer.Services.Backup;
+using JunimoServer.Services.CabinManager;
 using JunimoServer.Services.ChatCommands;
 using JunimoServer.Services.Commands;
 using JunimoServer.Services.CropSaver;
 using JunimoServer.Services.Daemon;
+using JunimoServer.Services.GalaxyAuth;
 using JunimoServer.Services.GameCreator;
 using JunimoServer.Services.GameLoader;
 using JunimoServer.Services.GameTweaks;
@@ -22,6 +25,9 @@ using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
 using StardewValley.Menus;
+using StardewValley.Network;
+using xTile.Dimensions;
+using xTile.ObjectModel;
 
 namespace JunimoServer
 {
@@ -51,10 +57,12 @@ namespace JunimoServer
             var alwaysOnServer = new AlwaysOnServer(helper, Monitor, chatCommands, _serverOptimizer, DisableRendering);
             _gameLoaderService = new GameLoaderService(helper, Monitor);
             var daemonService = new DaemonService(httpClient, Monitor);
-            _gameCreatorService = new GameCreatorService(_gameLoaderService, options, Monitor, daemonService);
             var backupService = new BackupService(httpClient, Monitor);
             var backupScheduler = new BackupScheduler(helper, backupService, Monitor);
             var gameTweaker = new GameTweaker(helper);
+            var cabinManager = new CabinManagerService(helper, Monitor, harmony, CabinStrategy.FarmhouseStack);
+            _gameCreatorService = new GameCreatorService(_gameLoaderService, options, Monitor, daemonService, cabinManager);
+            // var galaxyAuthService = new GalaxyAuthService(Monitor, helper, harmony);
 
             CabinCommand.Register(helper, chatCommands, options, Monitor);
 
@@ -62,6 +70,7 @@ namespace JunimoServer
             helper.Events.Input.ButtonPressed += OnButtonPressed;
 
             helper.Events.Multiplayer.PeerConnected += OnPeerConnected;
+            helper.Events.GameLoop.OneSecondUpdateTicked += OnOneSecondTicked;
 
             Monitor.Log("REST API starting: http://localhost:8081", LogLevel.Info);
 
@@ -85,6 +94,24 @@ namespace JunimoServer
             //server.Start();
         }
 
+        private void OnOneSecondTicked(object sender, OneSecondUpdateTickedEventArgs e)
+        {
+            // var code = Game1.server?.getInviteCode();
+            // if (code != null)
+            // {
+            //     Monitor.Log(code, LogLevel.Debug);
+            // }
+
+            if (Game1.hasLoadedGame)
+            {
+                var tile = Game1.getFarm().map.GetLayer("Buildings")
+                    .PickTile(new Location(64 * 64, 14 * 64), new Size(1280, 720));
+                tile.Properties.Clear();
+                tile.Properties.Add("Action", new PropertyValue("Warp 3 11 Beach"));
+            }
+        }
+
+
         private void OnPeerConnected(object sender, PeerConnectedEventArgs e)
         {
             ConditionallySendWelcomeMessage();
@@ -97,9 +124,9 @@ namespace JunimoServer
             if (Helper.GetCurrentNumCabins() > 1 || _sentWelcomeMessage) return;
             Helper.SendPublicMessage("!cabin");
             Helper.SendPublicMessage("Type !cabin to build a cabin. This will allow more people to join.");
-            
+
             Helper.SendPublicMessage("");
-            
+
             Helper.SendPublicMessage("!help");
             Helper.SendPublicMessage("Type !help for more info.");
             _sentWelcomeMessage = true;
@@ -156,7 +183,19 @@ namespace JunimoServer
             {
                 Monitor.Log($"{Game1.player.getTileLocation()}", LogLevel.Debug);
                 Monitor.Log($"{Game1.player.team.farmhandsCanMoveBuildings.Value}", LogLevel.Debug);
-                Monitor.Log($"{Game1.activeClickableMenu.GetType().Name}", LogLevel.Debug);
+
+                foreach (var warp in Game1.currentLocation.warps)
+                {
+                    Monitor.Log($"currLoc: {Game1.currentLocation.NameOrUniqueName} warp name: {warp.TargetName}, tarCoord: {warp.TargetX}, {warp.TargetY}");
+
+                }
+                if (Game1.activeClickableMenu != null)
+                {
+                    Monitor.Log($"{Game1.activeClickableMenu.GetType().Name}", LogLevel.Debug);
+                }
+            } else if (e.Button == SButton.Z)
+            {
+       
             }
         }
 
@@ -171,14 +210,22 @@ namespace JunimoServer
 
         private void OnTitleMenuLaunched()
         {
-            if (_gameLoaderService.HasLoadableSave())
+            var config = new NewGameConfig
             {
-                _gameLoaderService.LoadSave();
-            }
-            else
-            {
-                _gameCreatorService.CreateNewGameFromDaemonConfig();
-            }
+                WhichFarm = 0,
+                MaxPlayers = 9999,
+            };
+            _gameCreatorService.CreateNewGame(config);
+
+
+            // if (_gameLoaderService.HasLoadableSave())
+            // {
+            //     _gameLoaderService.LoadSave();
+            // }
+            // else
+            // {
+            //     _gameCreatorService.CreateNewGameFromDaemonConfig();
+            // }
         }
     }
 }
