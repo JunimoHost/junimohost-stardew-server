@@ -26,15 +26,15 @@ namespace JunimoServer.Services.GameLoader
 
         public bool HasLoadableSave()
         {
-            string saveName = _saveData.SaveNameToLoad;
+            var saveName = _saveData.SaveNameToLoad;
 
             if (saveName == null)
             {
                 return false;
             }
 
-            string savePath = GetSavePath(saveName);
-            bool saveExists = Directory.Exists(savePath);
+            var savePath = GetSavePath(saveName);
+            var saveExists = Directory.Exists(savePath);
 
             return saveExists;
 
@@ -42,9 +42,9 @@ namespace JunimoServer.Services.GameLoader
 
         public bool LoadSave()
         {
-            string saveName = _saveData.SaveNameToLoad;
-            string savePath = GetSavePath(saveName);
-            bool saveExists = Directory.Exists(savePath);
+            var saveName = _saveData.SaveNameToLoad;
+            var savePath = GetSavePath(saveName);
+            var saveExists = Directory.Exists(savePath);
             if (!saveExists)
             {
                 _monitor.Log($"{savePath} does not exist. Aborting load.", LogLevel.Warn);
@@ -82,7 +82,7 @@ namespace JunimoServer.Services.GameLoader
         public void SetCurrentGameAsSaveToLoad(string FarmName)
         {
             // Save name goes from nothing -> _uuid -> farmName_uuid (once loaded in completely)
-            string saveName = Constants.SaveFolderName;
+            var saveName = Constants.SaveFolderName;
             if (Constants.SaveFolderName.Substring(0, 1) == "_") // savename is in midpoint
             {
                 saveName = SaveGame.FilterFileName(FarmName) + saveName;

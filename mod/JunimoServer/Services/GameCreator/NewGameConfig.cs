@@ -12,16 +12,6 @@ namespace JunimoServer.Services.GameCreator
 
         public int MaxPlayers { get; set; } = 4;
 
-        //public static NewGameConfig FromCreateGameRequest(CreateGameRequest req) {
-        //    return new NewGameConfig { 
-        //        WhichFarm = req.WhichFarm,
-        //        UseSeperateWallets = req.UseSeperateWallets,
-        //        StartingCabins = req.StartingCabins,
-        //        CatPerson = req.CatPerson,
-        //        FarmName = req.FarmName,
-        //    };
-        //}
-
         public override string ToString()
         {
             return

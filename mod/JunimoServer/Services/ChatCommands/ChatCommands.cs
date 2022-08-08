@@ -51,7 +51,7 @@ namespace JunimoServer.Services.ChatCommands
             _monitor.Log($"{obj.Message}");
 
             var msg = obj.Message;
-            if (string.IsNullOrEmpty(msg) || msg[0] != '!' || msg.Length < 2)
+            if (String.IsNullOrEmpty(msg) || msg[0] != '!' || msg.Length < 2)
             {
                 return;
             }

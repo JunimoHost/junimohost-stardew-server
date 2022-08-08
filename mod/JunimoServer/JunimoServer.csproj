@@ -15,10 +15,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="Controllers" />
-	</ItemGroup>
-
-	<ItemGroup>
 	  <Reference Include="GalaxyCSharp">
 	    <HintPath>$(GamePath)\GalaxyCSharp.dll</HintPath>
 	  </Reference>

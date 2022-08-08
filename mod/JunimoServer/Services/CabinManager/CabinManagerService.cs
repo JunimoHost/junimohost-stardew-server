@@ -35,6 +35,7 @@ namespace JunimoServer.Services.CabinManager
         public const int HiddenCabinY = -20;
 
         private readonly CabinStrategy _strategy;
+        private readonly HashSet<long> farmersInFarmhouse = new HashSet<long>();
 
         public CabinManagerService(IModHelper helper, IMonitor monitor, Harmony harmony, CabinStrategy cabinStrategy,
             bool debug = false)
@@ -84,9 +85,7 @@ namespace JunimoServer.Services.CabinManager
                 MonitorFarmhouse();
             }
         }
-
-        private readonly HashSet<long> farmersInFarmhouse = new HashSet<long>();
-
+        
         private void MonitorFarmhouse()
         {
             if (!Game1.hasLoadedGame) return;

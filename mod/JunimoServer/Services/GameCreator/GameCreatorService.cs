@@ -35,7 +35,7 @@ namespace JunimoServer.Services.GameCreator
             _cabinManagerService = cabinManagerService;
         }
 
-        public void CreateNewGameFromDaemonConfig()
+        public bool CreateNewGameFromDaemonConfig()
         {
             try
             {
@@ -44,23 +44,12 @@ namespace JunimoServer.Services.GameCreator
                 var config = configTask.Result;
 
                 CreateNewGame(config);
+                return true;
             }
             catch (Exception e)
             {
                 _monitor.Log(e.ToString(), LogLevel.Error);
-                var updateTask = _daemonService.UpdateNotConnectableStatus();
-                updateTask.Wait();
-                return;
-            }
-
-            try
-            {
-                var updateTask = _daemonService.UpdateConnectableStatus();
-                updateTask.Wait();
-            }
-            catch (Exception e)
-            {
-                _monitor.Log(e.ToString(), LogLevel.Error);
+                return false;
             }
         }
 

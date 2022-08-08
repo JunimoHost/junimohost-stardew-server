@@ -21,8 +21,8 @@ namespace JunimoServer.Services.Backup
             _monitor = monitor;
             _modHelper = modHelper;
 
-            modHelper.Events.GameLoop.SaveCreated += OnSaveCreated;
-            modHelper.Events.GameLoop.Saved += OnSaveCreated;
+            modHelper.Events.GameLoop.SaveCreated += OnSaveCreated; // day 0
+            modHelper.Events.GameLoop.Saved += OnSaveCreated; // every other day
         }
 
         private void OnSaveCreated(object sender, SavedEventArgs e)
