@@ -1,8 +1,6 @@
 ﻿using System;
 using Galaxy.Api;
 using StardewModdingAPI;
-using StardewValley;
-using StardewValley.Menus;
 using StardewValley.SDKs;
 using Steamworks;
 

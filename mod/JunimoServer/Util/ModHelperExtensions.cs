@@ -3,7 +3,6 @@ using System.Linq;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Locations;
-using StardewValley.Menus;
 
 namespace JunimoServer.Util
 {

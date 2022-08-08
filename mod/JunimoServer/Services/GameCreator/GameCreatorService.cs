@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Json;
 using System.Threading;
 using JunimoServer.Services.CabinManager;
 using JunimoServer.Services.Daemon;
@@ -10,7 +8,6 @@ using JunimoServer.Services.PersistentOption;
 using Microsoft.Xna.Framework;
 using StardewModdingAPI;
 using StardewValley;
-using StardewValley.Menus;
 
 namespace JunimoServer.Services.GameCreator
 {

@@ -1,5 +1,4 @@
-﻿using Galaxy.Api;
-using HarmonyLib;
+﻿using HarmonyLib;
 using StardewModdingAPI;
 using StardewValley.SDKs;
 

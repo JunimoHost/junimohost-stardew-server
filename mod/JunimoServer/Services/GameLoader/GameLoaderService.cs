@@ -1,12 +1,8 @@
-﻿using StardewModdingAPI;
+﻿using System;
+using System.IO;
+using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Menus;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace JunimoServer.Services.GameLoader
 {

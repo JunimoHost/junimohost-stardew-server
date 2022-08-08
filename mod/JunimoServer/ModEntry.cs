@@ -1,11 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Net;
 using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
 using HarmonyLib;
-using JunimoServer.Services;
 using JunimoServer.Services.AlwaysOnServer;
 using JunimoServer.Services.Backup;
 using JunimoServer.Services.CabinManager;
@@ -13,28 +8,22 @@ using JunimoServer.Services.ChatCommands;
 using JunimoServer.Services.Commands;
 using JunimoServer.Services.CropSaver;
 using JunimoServer.Services.Daemon;
-using JunimoServer.Services.GalaxyAuth;
 using JunimoServer.Services.GameCreator;
 using JunimoServer.Services.GameLoader;
 using JunimoServer.Services.GameTweaks;
 using JunimoServer.Services.PersistentOption;
 using JunimoServer.Services.ServerOptim;
-using JunimoServer.Util;
-using SimpleHttp;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
 using StardewValley.Menus;
-using StardewValley.Network;
-using xTile.Dimensions;
-using xTile.ObjectModel;
 
 namespace JunimoServer
 {
     internal class ModEntry : Mod
     {
         private static readonly string DaemonPort = Environment.GetEnvironmentVariable("DAEMON_HTTP_PORT") ?? "8080";
-        private const bool DisableRendering = true;
+        private static readonly bool DisableRendering = Boolean.Parse(Environment.GetEnvironmentVariable("DISABLE_RENDERING") ?? "true");
 
         private GameCreatorService _gameCreatorService;
         private GameLoaderService _gameLoaderService;
@@ -71,23 +60,16 @@ namespace JunimoServer
 
         }
 
-        private void OnRenderedActiveMenu(object sender, RenderedActiveMenuEventArgs e)
-        {
-            if (Game1.activeClickableMenu is TitleMenu && !_titleLaunched)
-            {
-                OnTitleMenuLaunched();
-                _titleLaunched = true;
-            }
-        }
 
         private void OnTitleMenuLaunched()
         {
-            // var config = new NewGameConfig
-            // {
-            //     WhichFarm = 0,
-            //     MaxPlayers = 9999,
-            // };
-            // _gameCreatorService.CreateNewGame(config);
+            var config = new NewGameConfig
+            {
+                WhichFarm = 0,
+                MaxPlayers = 9999,
+            };
+            _gameCreatorService.CreateNewGame(config);
+            return;
 
             bool successfullyStarted = true;
             if (_gameLoaderService.HasLoadableSave())
@@ -115,6 +97,15 @@ namespace JunimoServer
             catch (Exception e)
             {
                 Monitor.Log(e.ToString(), LogLevel.Error);
+            }
+        }
+
+        private void OnRenderedActiveMenu(object sender, RenderedActiveMenuEventArgs e)
+        {
+            if (Game1.activeClickableMenu is TitleMenu && !_titleLaunched)
+            {
+                OnTitleMenuLaunched();
+                _titleLaunched = true;
             }
         }
     }

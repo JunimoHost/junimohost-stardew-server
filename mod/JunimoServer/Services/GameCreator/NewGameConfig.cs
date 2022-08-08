@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace JunimoServer.Services.GameCreator
+﻿namespace JunimoServer.Services.GameCreator
 {
     public class NewGameConfig
     {

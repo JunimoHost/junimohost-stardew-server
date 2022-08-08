@@ -1,21 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using JunimoServer.Services.ChatCommands;
+using JunimoServer.Services.PersistentOption;
 using JunimoServer.Util;
 using Microsoft.Xna.Framework;
 using StardewModdingAPI;
 using StardewValley;
-using StardewValley.Locations;
-using StardewValley.Network;
-using StardewValley.TerrainFeatures;
 
 namespace JunimoServer.Services.Commands
 {
     public static class CabinCommand
     {
         public static void Register(IModHelper helper, IChatCommandApi chatCommandApi,
-            PersistentOption.PersistentOptions options, IMonitor monitor)
+            PersistentOptions options, IMonitor monitor)
         {
             chatCommandApi.RegisterCommand("cabin",
                 "!cabin plank|log|stone places a cabin right of player's location.\nThis will clear basic debris to make space.",
