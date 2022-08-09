@@ -1,13 +1,17 @@
 ﻿using HarmonyLib;
 using StardewModdingAPI;
+using StardewModdingAPI.Events;
 using StardewValley;
 
 namespace JunimoServer.Services.ServerOptim
 {
     public class ServerOptimizer
     {
-        public ServerOptimizer(Harmony harmony, IMonitor monitor)
+        private readonly bool _disableRendering;
+
+        public ServerOptimizer(Harmony harmony, IMonitor monitor, IModHelper helper, bool disableRendering)
         {
+            _disableRendering = disableRendering;
             ServerOptimizerOverrides.Initialize(monitor);
             harmony.Patch(
                 original: AccessTools.Method(typeof(GameRunner), "BeginDraw"),
@@ -15,16 +19,26 @@ namespace JunimoServer.Services.ServerOptim
                     nameof(ServerOptimizerOverrides.Draw_Prefix))
             );
 
+            helper.Events.GameLoop.DayStarted += OnDayStarted;
+            helper.Events.GameLoop.Saving += OnSaving;
+
         }
 
-        public void DisableDrawing()
+        private void OnDayStarted(object sender, DayStartedEventArgs e)
         {
-            ServerOptimizerOverrides.DisableDrawing();
+            if (_disableRendering)
+            {
+                ServerOptimizerOverrides.DisableDrawing();
+            }
         }
-        
-        public void EnableDrawing()
+
+        private void OnSaving(object sender, SavingEventArgs e)
         {
-            ServerOptimizerOverrides.EnableDrawing();
+            if (_disableRendering)
+            {
+                ServerOptimizerOverrides.EnableDrawing();
+            }
         }
+
     }
 }

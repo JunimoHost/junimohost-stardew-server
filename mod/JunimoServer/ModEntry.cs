@@ -11,6 +11,7 @@ using JunimoServer.Services.Daemon;
 using JunimoServer.Services.GameCreator;
 using JunimoServer.Services.GameLoader;
 using JunimoServer.Services.GameTweaks;
+using JunimoServer.Services.HostAutomation;
 using JunimoServer.Services.PersistentOption;
 using JunimoServer.Services.ServerOptim;
 using StardewModdingAPI;
@@ -43,8 +44,8 @@ namespace JunimoServer
             var options = new PersistentOptions(helper);
             var chatCommands = new ChatCommands(Monitor, harmony, helper);
             var cropSaver = new CropSaver(helper, harmony, Monitor);
-            _serverOptimizer = new ServerOptimizer(harmony, Monitor);
-            var alwaysOnServer = new AlwaysOnServer(helper, Monitor, chatCommands, _serverOptimizer, DisableRendering);
+            _serverOptimizer = new ServerOptimizer(harmony, Monitor, helper, DisableRendering);
+            var alwaysOnServer = new AlwaysOnServer(helper, Monitor, chatCommands);
             _gameLoaderService = new GameLoaderService(helper, Monitor);
             _daemonService = new DaemonService(httpClient, Monitor);
             var backupService = new BackupService(httpClient, Monitor);
@@ -54,6 +55,7 @@ namespace JunimoServer
             _gameCreatorService = new GameCreatorService(_gameLoaderService, options, Monitor, _daemonService, cabinManager);
             // var galaxyAuthService = new GalaxyAuthService(Monitor, helper, harmony);
 
+            var hostBot = new HostBot(helper, Monitor);
             CabinCommand.Register(helper, chatCommands, options, Monitor);
 
             helper.Events.Display.RenderedActiveMenu += OnRenderedActiveMenu;

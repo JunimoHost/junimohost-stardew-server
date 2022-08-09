@@ -115,11 +115,14 @@ namespace JunimoServer.Services.CabinManager
                 building.isCabin && ((Cabin) building.indoors.Value).owner.UniqueMultiplayerID ==
                 farmer.UniqueMultiplayerID);
             var farmersCabinUniqueLocation = farmersCabin.nameOfIndoors;
+            var farmersCabinEntrypoint = ((Cabin)farmersCabin.indoors.Value).getEntryLocation();
+            
+            // Pass out request
             Game1.server.sendMessage(farmer.UniqueMultiplayerID, 29, Game1.player, new object[]
             {
                 farmersCabinUniqueLocation,
-                3,
-                11,
+                farmersCabinEntrypoint.X,
+                farmersCabinEntrypoint.Y,
                 true
             });
         }

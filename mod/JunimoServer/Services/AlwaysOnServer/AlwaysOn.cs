@@ -69,17 +69,12 @@ namespace JunimoServer.Services.AlwaysOnServer
 
         private readonly IModHelper _helper;
         private readonly IMonitor _monitor;
-        private readonly ServerOptimizer _optimizer;
-        private readonly bool _disableRendering;
 
 
-        public AlwaysOnServer(IModHelper helper, IMonitor monitor, IChatCommandApi chatCommandApi,
-            ServerOptimizer optimizer, bool disableRendering)
+        public AlwaysOnServer(IModHelper helper, IMonitor monitor, IChatCommandApi chatCommandApi)
         {
             _helper = helper;
             _monitor = monitor;
-            _optimizer = optimizer;
-            _disableRendering = disableRendering;
 
 
             helper.ConsoleCommands.Add("server", "Toggles headless 'auto mode' on/off", this.ToggleAutoMode);
@@ -94,7 +89,6 @@ namespace JunimoServer.Services.AlwaysOnServer
             helper.Events.Display.Rendered += OnRendered;
             helper.Events.Specialized.UnvalidatedUpdateTicked +=
                 OnUnvalidatedUpdateTick; //used bc only thing that gets throug save window
-            helper.Events.GameLoop.DayStarted += OnDayStarted;
             helper.Events.GameLoop.DayEnding += OnDayEnd;
 
             chatCommandApi.RegisterCommand("event", "Tries to start the current festival's event.", StartEvent);
@@ -106,16 +100,6 @@ namespace JunimoServer.Services.AlwaysOnServer
             warpTickCounter = 0;
         }
 
-        private void OnDayStarted(object sender, DayStartedEventArgs e)
-        {
-            if (_disableRendering)
-            {
-                _optimizer.DisableDrawing();
-            }
-
-
-            WarpToHidingSpot();
-        }
 
 
         /// <summary>Raised after the player loads a save slot and the world is initialised.</summary>
@@ -197,16 +181,12 @@ namespace JunimoServer.Services.AlwaysOnServer
         private void TurnOffAutoMode()
         {
             IsAutomating = false;
-            WarpToHidingSpot();
             _monitor.Log("Auto mode off!", LogLevel.Info);
 
             Game1.chatBox.addInfoMessage("The host has returned!");
             Game1.displayHUD = true;
             Game1.addHUDMessage(new HUDMessage("Auto Mode Off!", ""));
-            if (_disableRendering)
-            {
-                _optimizer.EnableDrawing();
-            }
+         
         }
 
         private void TurnOnAutoMode()
@@ -219,18 +199,7 @@ namespace JunimoServer.Services.AlwaysOnServer
             Game1.displayHUD = true;
             Game1.addHUDMessage(new HUDMessage("Auto Mode On!", ""));
 
-            // WarpToHidingSpot();
-
-            if (_disableRendering)
-            {
-                _optimizer.DisableDrawing();
-            }
-            // set in game levels to max (leaving out, not sure why this was needed)
-            // Game1.player.FarmingLevel = 10;
-            // Game1.player.MiningLevel = 10;
-            // Game1.player.ForagingLevel = 10;
-            // Game1.player.FishingLevel = 10;
-            // Game1.player.CombatLevel = 10;
+      
         }
 
         /// <summary>Raised after the player presses a button on the keyboard, controller, or mouse.</summary>
@@ -668,7 +637,6 @@ namespace JunimoServer.Services.AlwaysOnServer
         {
             HandleAutoSleep();
             HandleAutoLeaveFestival();
-            HandleHidingFarmer();
 
             // lock player chests
             if (Config.LockPlayerChests)
@@ -725,18 +693,6 @@ namespace JunimoServer.Services.AlwaysOnServer
                 {
                     IsAutomating = false;
                 }
-            }
-        }
-
-        private void HandleHidingFarmer()
-        {
-            if (IsAutomating)
-            {
-                Game1.displayFarmer = false;
-            }
-            else
-            {
-                Game1.displayFarmer = true;
             }
         }
 
@@ -1184,10 +1140,7 @@ namespace JunimoServer.Services.AlwaysOnServer
         /// <param name="e">The event data.</param>
         private void OnSaving(object sender, SavingEventArgs e)
         {
-            if (_disableRendering)
-            {
-                _optimizer.EnableDrawing();
-            }
+
 
             if (IsAutomating)
             {
