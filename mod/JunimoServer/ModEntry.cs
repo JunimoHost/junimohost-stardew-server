@@ -8,12 +8,15 @@ using JunimoServer.Services.ChatCommands;
 using JunimoServer.Services.Commands;
 using JunimoServer.Services.CropSaver;
 using JunimoServer.Services.Daemon;
+using JunimoServer.Services.GalaxyAuth;
 using JunimoServer.Services.GameCreator;
 using JunimoServer.Services.GameLoader;
 using JunimoServer.Services.GameTweaks;
 using JunimoServer.Services.HostAutomation;
+using JunimoServer.Services.NetworkTweaks;
 using JunimoServer.Services.PersistentOption;
 using JunimoServer.Services.ServerOptim;
+using JunimoServer.Services.SteamAuth;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
@@ -23,8 +26,11 @@ namespace JunimoServer
 {
     internal class ModEntry : Mod
     {
+
+        private static readonly string SteamAuthServerAddress = Environment.GetEnvironmentVariable("STEAM_AUTH_IP_PORT") ?? "localhost:8083";
         private static readonly string DaemonPort = Environment.GetEnvironmentVariable("DAEMON_HTTP_PORT") ?? "8080";
         private static readonly bool DisableRendering = Boolean.Parse(Environment.GetEnvironmentVariable("DISABLE_RENDERING") ?? "true");
+        private static readonly bool ForceNewDebugGame = Boolean.Parse(Environment.GetEnvironmentVariable("FORCE_NEW_DEBUG_GAME") ?? "false");
 
         private GameCreatorService _gameCreatorService;
         private GameLoaderService _gameLoaderService;
@@ -38,8 +44,9 @@ namespace JunimoServer
             Game1.options.pauseWhenOutOfFocus = false;
 
             var harmony = new Harmony(this.ModManifest.UniqueID);
-            var httpClient = new HttpClient();
-            httpClient.BaseAddress = new Uri($"http://localhost:{DaemonPort}");
+            var daemonHttpClient = new HttpClient();
+            daemonHttpClient.BaseAddress = new Uri($"http://localhost:{DaemonPort}");
+
 
             var options = new PersistentOptions(helper);
             var chatCommands = new ChatCommands(Monitor, harmony, helper);
@@ -47,16 +54,21 @@ namespace JunimoServer
             _serverOptimizer = new ServerOptimizer(harmony, Monitor, helper, DisableRendering);
             var alwaysOnServer = new AlwaysOnServer(helper, Monitor, chatCommands);
             _gameLoaderService = new GameLoaderService(helper, Monitor);
-            _daemonService = new DaemonService(httpClient, Monitor);
-            var backupService = new BackupService(httpClient, Monitor);
+            _daemonService = new DaemonService(daemonHttpClient, Monitor);
+            var backupService = new BackupService(daemonHttpClient, Monitor);
             var backupScheduler = new BackupScheduler(helper, backupService, Monitor);
             var gameTweaker = new GameTweaker(helper);
             var cabinManager = new CabinManagerService(helper, Monitor, harmony, CabinStrategy.FarmhouseStack);
             _gameCreatorService = new GameCreatorService(_gameLoaderService, options, Monitor, _daemonService, cabinManager);
-            // var galaxyAuthService = new GalaxyAuthService(Monitor, helper, harmony);
+            var networkTweaker = new NetworkTweaker(helper, options);
+            
+            // var steamAuthHttpClient = new HttpClient();
+            // steamAuthHttpClient.BaseAddress = new Uri($"http://{SteamAuthServerAddress}");
+            // var steamAuthClient = new SteamAuthClient(steamAuthHttpClient, Monitor);
+            // var galaxyAuthService = new GalaxyAuthService(Monitor, helper, harmony, steamAuthClient);
 
             var hostBot = new HostBot(helper, Monitor);
-            CabinCommand.Register(helper, chatCommands, options, Monitor);
+            // CabinCommand.Register(helper, chatCommands, options, Monitor);
 
             helper.Events.Display.RenderedActiveMenu += OnRenderedActiveMenu;
 
@@ -65,13 +77,18 @@ namespace JunimoServer
 
         private void OnTitleMenuLaunched()
         {
-            var config = new NewGameConfig
+
+            if (ForceNewDebugGame)
             {
-                WhichFarm = 0,
-                MaxPlayers = 9999,
-            };
-            _gameCreatorService.CreateNewGame(config);
-            return;
+                var config = new NewGameConfig
+                {
+                    WhichFarm = 0,
+                    MaxPlayers = 9999,
+                };
+                _gameCreatorService.CreateNewGame(config);
+                return;
+            }
+
 
             bool successfullyStarted = true;
             if (_gameLoaderService.HasLoadableSave())

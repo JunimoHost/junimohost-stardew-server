@@ -1,5 +1,6 @@
 ﻿using System;
 using Galaxy.Api;
+using JunimoServer.Services.SteamAuth;
 using StardewModdingAPI;
 using StardewValley.SDKs;
 using Steamworks;
@@ -10,16 +11,18 @@ namespace JunimoServer.Services.GalaxyAuth
     {
         private static IMonitor _monitor;
         private static IModHelper _helper;
+        private static SteamAuthClient _steamAuthClient;
 
         private static GalaxyHelper.OperationalStateChangeListener _stateChangeListener;
         private static GalaxyHelper.AuthListener _authListener;
         private const string SaveKey = "JunimoHost.steamticket";
 
 
-        public static void Initialize(IMonitor monitor, IModHelper helper)
+        public static void Initialize(IMonitor monitor, IModHelper helper, SteamAuthClient steamAuthClient)
         {
             _monitor = monitor;
             _helper = helper;
+            _steamAuthClient = steamAuthClient;
         }
 
 
@@ -47,15 +50,16 @@ namespace JunimoServer.Services.GalaxyAuth
                     Console.WriteLine("Initializing GalaxySDK");
                     GalaxyInstance.Init(new InitParams("48767653913349277",
                         "58be5c2e55d7f535cf8c4b6bbc09d185de90b152c8c42703cc13502465f0d04a", "."));
-                    var encryptedAppTicketResponse = CallResult<EncryptedAppTicketResponse_t>.Create(
-                        (response, ioFailure) => OnEncryptedAppTicketResponse(__instance, response, ioFailure));
+
                     _authListener =
                         new GalaxyHelper.AuthListener(onGalaxyAuthSuccess, onGalaxyAuthFailure, onGalaxyAuthLost);
                     _stateChangeListener = new GalaxyHelper.OperationalStateChangeListener(onGalaxyStateChange);
 
                     Console.WriteLine("Requesting Steam app ticket");
-                    SteamAPICall_t handle = SteamUser.RequestEncryptedAppTicket(new byte[0], 0);
-                    encryptedAppTicketResponse.Set(handle, null);
+
+                    var ticket = _steamAuthClient.GetTicketSync();
+                    GalaxyInstance.User().SignInSteam(ticket.Ticket, ticket.TicketSize, ticket.Name);
+
 
                     _helper.Reflection.GetProperty<int>(__instance, "ConnectionProgress")
                         .SetValue(__instance.ConnectionProgress + 1);
@@ -108,8 +112,8 @@ namespace JunimoServer.Services.GalaxyAuth
                 else
                 {
                     var ticket = _helper.Data.ReadGlobalData<SteamTicket>(SaveKey);
+                    
                     Console.WriteLine("Signing into GalaxySDK");
-                    GalaxyInstance.User().SignInSteam(ticket.Ticket, ticket.TicketSize, ticket.Name);
                 }
 
 
