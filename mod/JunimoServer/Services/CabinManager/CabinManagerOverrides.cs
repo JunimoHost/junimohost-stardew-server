@@ -17,14 +17,21 @@ namespace JunimoServer.Services.CabinManager
         private static IModHelper _helper;
         private static CabinManagerData _cabinManagerData;
         private static CabinStrategy _strategy;
+        private static Action<long> _onServerJoined;
 
         public static void Initialize(IModHelper helper, IMonitor monitor, CabinManagerData cabinManagerData,
-            CabinStrategy strategy)
+            CabinStrategy strategy, Action<long> onServerJoined)
         {
             _helper = helper;
             _monitor = monitor;
             _cabinManagerData = cabinManagerData;
             _strategy = strategy;
+            _onServerJoined = onServerJoined;
+        }
+
+        public static void sendServerIntroduction_Postfix(long peer)
+        {
+            _onServerJoined?.Invoke(peer);
         }
 
 
@@ -87,7 +94,7 @@ namespace JunimoServer.Services.CabinManager
             var allCabins = buildings.Where(building =>
                 building.isCabin).ToArray();
 
-
+            //select the player's cabin if its in the hidden stack
             var cabinsToMove = allCabins
                 .Where(building => ((Cabin) building.indoors.Value).owner.UniqueMultiplayerID == playerId)
                 .Where(building => building.tileX.Value == CabinManagerService.HiddenCabinX
@@ -179,10 +186,6 @@ namespace JunimoServer.Services.CabinManager
         public static void broadcastLocationMessage_Postfix(Multiplayer __instance, GameLocation loc,
             OutgoingMessage message)
         {
-            if (loc.Name.StartsWith("Cabin"))
-            {
-                _monitor.Log("cabin info");
-            }
 
             if (loc.Name is not "Farm" || loc.Name.StartsWith("Cabin"))
             {

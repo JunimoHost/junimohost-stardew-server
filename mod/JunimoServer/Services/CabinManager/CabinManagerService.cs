@@ -43,10 +43,9 @@ namespace JunimoServer.Services.CabinManager
             _helper = helper;
             _monitor = monitor;
             _strategy = cabinStrategy;
-            CabinManagerOverrides.Initialize(helper, monitor, data, cabinStrategy);
+            CabinManagerOverrides.Initialize(helper, monitor, data, cabinStrategy, OnServerJoined);
 
             _helper.Events.GameLoop.SaveLoaded += OnSaveLoaded;
-            _helper.Events.Multiplayer.PeerConnected += OnPeerConnected;
             _helper.Events.GameLoop.UpdateTicked += OnTicked;
             if (debug)
             {
@@ -75,6 +74,18 @@ namespace JunimoServer.Services.CabinManager
                 postfix: new HarmonyMethod(typeof(CabinManagerOverrides),
                     nameof(CabinManagerOverrides.sendLocation_Postfix))
             );
+            
+            harmony.Patch(
+                original: AccessTools.Method(typeof(GameServer), nameof(GameServer.sendServerIntroduction)),
+                postfix: new HarmonyMethod(typeof(CabinManagerOverrides),
+                    nameof(CabinManagerOverrides.sendServerIntroduction_Postfix))
+            );
+        }
+        private void OnServerJoined(long peerId)
+        {
+            data.AllPlayerIdsEverJoined.Add(peerId);
+            _helper.Data.WriteSaveData(CabinManagerDataKey, data);
+            EnsureAtLeastXCabins();
         }
 
 
@@ -133,14 +144,6 @@ namespace JunimoServer.Services.CabinManager
             var cabinLocation = new Vector2(initialCabin.tileX.Value, initialCabin.tileY.Value);
             var stackLocation = data.DefaultCabinLocation ?? cabinLocation;
             return stackLocation;
-        }
-
-
-        private void OnPeerConnected(object sender, PeerConnectedEventArgs e)
-        {
-            data.AllPlayerIdsEverJoined.Add(e.Peer.PlayerID);
-            _helper.Data.WriteSaveData(CabinManagerDataKey, data);
-            EnsureAtLeastXCabins();
         }
 
         private void OnSaveLoaded(object sender, SaveLoadedEventArgs e)
