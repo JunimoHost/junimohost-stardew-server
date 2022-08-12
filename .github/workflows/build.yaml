@@ -40,7 +40,7 @@ jobs:
 
       - uses: actions/setup-dotnet@v2
         with:
-          dotnet-version: "6.x.x"
+          dotnet-version: "6.0.302"
 
       - uses: google-github-actions/setup-gcloud@v0
         with:
