@@ -29,8 +29,8 @@ namespace JunimoServer
 
         private static readonly string SteamAuthServerAddress = Environment.GetEnvironmentVariable("STEAM_AUTH_IP_PORT") ?? "localhost:8083";
         private static readonly string DaemonPort = Environment.GetEnvironmentVariable("DAEMON_HTTP_PORT") ?? "8080";
-        private static readonly bool DisableRendering = Boolean.Parse(Environment.GetEnvironmentVariable("DISABLE_RENDERING") ?? "true");
-        private static readonly bool ForceNewDebugGame = Boolean.Parse(Environment.GetEnvironmentVariable("FORCE_NEW_DEBUG_GAME") ?? "false");
+        private static readonly bool DisableRendering = bool.Parse(Environment.GetEnvironmentVariable("DISABLE_RENDERING") ?? "true");
+        private static readonly bool ForceNewDebugGame = bool.Parse(Environment.GetEnvironmentVariable("FORCE_NEW_DEBUG_GAME") ?? "false");
 
         private GameCreatorService _gameCreatorService;
         private GameLoaderService _gameLoaderService;
@@ -90,7 +90,7 @@ namespace JunimoServer
             }
 
 
-            bool successfullyStarted = true;
+            var successfullyStarted = true;
             if (_gameLoaderService.HasLoadableSave())
             {
                 successfullyStarted = _gameLoaderService.LoadSave();

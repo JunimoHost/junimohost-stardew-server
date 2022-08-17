@@ -148,7 +148,7 @@ namespace JunimoServer.Services.CabinManager
 
         private void OnSaveLoaded(object sender, SaveLoadedEventArgs e)
         {
-            data = _helper.Data.ReadSaveData<CabinManagerData>(CabinManagerDataKey);
+            data = _helper.Data.ReadSaveData<CabinManagerData>(CabinManagerDataKey) ?? new CabinManagerData();
         }
 
         public void SetDefaultCabinLocation(Vector2 location)
