@@ -5,6 +5,7 @@ ENV APP_NAME="StardewValley"
 ENV USER_ID=0
 ENV GROUP_ID=0
 ENV TZ=America/New_York
+ENV HOME=/root
 
 RUN apt-get update \
     && apt-get install -y \
@@ -25,6 +26,8 @@ RUN wget https://github.com/Pathoschild/SMAPI/releases/download/3.15.1/SMAPI-3.1
 RUN chmod +x /data/Stardew/Stardew\ Valley/StardewValley && \
     chmod -R 777 /data/Stardew/ && \
     chown -R 1000:1000 /data/Stardew
+
+RUN rm "/data/Stardew/Stardew Valley/Content/XACT/Wave Bank.xwb" "/data/Stardew/Stardew Valley/Content/XACT/Wave Bank(1.4).xwb"
 
 COPY ["mods", "/data/Stardew/Stardew Valley/Mods/"]
 RUN chmod -R 777 /data/Stardew/Stardew\ Valley/Mods

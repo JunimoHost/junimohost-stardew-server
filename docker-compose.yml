@@ -11,9 +11,10 @@ services:
       - "BACKUP_GCS_BUCKET=junimo-test-backups"
       - "GOOGLE_APPLICATION_CREDENTIALS=/etc/gcp/stardew-sa.json"
       - "NO_BACKEND=true"
+      - "FORCE_NEW_DEBUG_GAME=true"
 
-    cpus: 0.4
-    mem_limit: 1Gi
+    # cpus: 0.4
+    # mem_limit: 1Gi
 
     ports:
       # # VNC
