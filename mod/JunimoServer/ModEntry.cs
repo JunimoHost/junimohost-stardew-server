@@ -67,7 +67,7 @@ namespace JunimoServer
             // _gameCreatorService =
             //     new GameCreatorService(_gameLoaderService, options, Monitor, _daemonService, cabinManager);
             var networkTweaker = new NetworkTweaker(helper, options);
-            // var desyncKicker = new DesyncKicker(helper, Monitor);
+            var desyncKicker = new DesyncKicker(helper, Monitor);
 
             // var steamAuthHttpClient = new HttpClient();
             // steamAuthHttpClient.BaseAddress = new Uri($"http://{SteamAuthServerAddress}");
