@@ -136,15 +136,15 @@ namespace JunimoServer.Services.CropSaver
                 )
             );
 
-            _monitor.Log(
-                $"Added crop planted at: {feature.currentLocation} on: {feature.currentTileLocation} by: {closestFarmer.Name}");
+            // _monitor.Log(
+            //     $"Added crop planted at: {feature.currentLocation} on: {feature.currentTileLocation} by: {closestFarmer.Name}");
         }
 
         private void OnCropRemoved(TerrainFeature feature)
         {
             _cropSaverDataLoader.RemoveCrop(feature.currentLocation.Name, feature.currentTileLocation);
-            _monitor.Log(
-                $"Removed crop at: {feature.currentLocation} on: {feature.currentTileLocation}");
+            // _monitor.Log(
+            //     $"Removed crop at: {feature.currentLocation} on: {feature.currentTileLocation}");
         }
     }
 }

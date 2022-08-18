@@ -1,7 +1,10 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
+using Netcode;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
+using StardewValley.Network;
 
 namespace JunimoServer.Services.NetworkTweaks
 {
@@ -33,15 +36,39 @@ namespace JunimoServer.Services.NetworkTweaks
         {
             if (!_enableTimer) return;
 
+            LogChecks();
             if (_desyncTimer == DesyncMaxTime)
             {
                 DisableTimer();
 
-                KickDesynedPlayers();
+                // KickDesynedPlayers();
             }
             else
             {
                 _desyncTimer++;
+            }
+        }
+
+        private void LogChecks()
+        {
+            var checks = new string[]
+            {
+                "ready_for_save",
+                "wakeup"
+            };
+            foreach (var check in checks)
+            {
+                foreach (var farmer in Game1.getOnlineFarmers()
+                             .Where(farmer => !Game1.player.team.IsOtherFarmerReady(check, farmer)))
+                {
+                    _monitor.Log($"{farmer.Name}:{farmer.UniqueMultiplayerID} hasn't passed {check}");
+                }
+            }
+
+            foreach (var farmer in Game1.getOnlineFarmers())
+            {
+                _monitor.Log(
+                    $"{farmer.Name}:{farmer.UniqueMultiplayerID} end of night status: {Game1.player.team.endOfNightStatus.GetStatusText(farmer.UniqueMultiplayerID)}");
             }
         }
 
