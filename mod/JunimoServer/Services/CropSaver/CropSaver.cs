@@ -76,7 +76,7 @@ namespace JunimoServer.Services.CropSaver
                 var dateOfDeath = CalculateDateOfDeath(crop, saverCrop);
                 var fullyGrown = CalculateFullyGrown(crop);
                 
-                _monitor.Log($"Crop owned by {saverCrop.ownerId} will die when sleeping on {dateOfDeath}");
+                // _monitor.Log($"Crop owned by {saverCrop.ownerId} will die when sleeping on {dateOfDeath}");
 
                 var isAfterDateOfDeath = SDate.Now() >= dateOfDeath;
 

@@ -1,4 +1,4 @@
-VERSION=v0.15.4
+VERSION=v0.14.9-desynckick
 
 build: docker/game-daemon docker/mods/JunimoServer $(shell find docker -type f)
 	docker build --platform=amd64 -t gcr.io/junimo-host/stardew-base:$(VERSION) ./docker/

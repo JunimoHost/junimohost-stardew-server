@@ -19,7 +19,7 @@ namespace JunimoServer.Services.NetworkTweaks
         private void OnTick(object sender, UpdateTickedEventArgs e)
         {
             
-            if (Game1.netWorldState == null) return;
+            if (Game1.netWorldState == null || !Game1.hasLoadedGame) return;
             
             var multiplayer = _helper.Reflection.GetField<Multiplayer>(typeof(Game1), "multiplayer").GetValue();
             var maxPlayers = _options.Data.MaxPlayers;
@@ -33,7 +33,7 @@ namespace JunimoServer.Services.NetworkTweaks
             {
                 Game1.netWorldState.Value.CurrentPlayerLimit.Set(maxPlayers);
             }
-
+            
             if (Game1.netWorldState.Value.HighestPlayerLimit.Value != maxPlayers)
             {
                 Game1.netWorldState.Value.HighestPlayerLimit.Set(maxPlayers);

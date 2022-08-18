@@ -1158,18 +1158,6 @@ namespace JunimoServer.Services.AlwaysOnServer
         /// <param name="e">The event data.</param>
         private void OnUnvalidatedUpdateTick(object sender, UnvalidatedUpdateTickedEventArgs e)
         {
-            if (SDateHelper.IsDanceOfJelliesToday() ||
-                SDateHelper.IsSpiritsEveToday() && this.Config.EndOfDayTimeOut != 0)
-            {
-                if (Game1.timeOfDay is >= 2400 or 600)
-                {
-                    timeOutTicksForReset += 1;
-                    if (timeOutTicksForReset >= (5040 + (this.Config.EndOfDayTimeOut * 60)))
-                    {
-                        Game1.options.setServerMode("offline");
-                    }
-                }
-            }
 
             if (shippingMenuActive && this.Config.EndOfDayTimeOut != 0)
             {
@@ -1180,7 +1168,7 @@ namespace JunimoServer.Services.AlwaysOnServer
                 }
             }
 
-            if (Game1.timeOfDay == 610)
+            if (Game1.timeOfDay == 600)
             {
                 shippingMenuActive = false;
 

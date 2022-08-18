@@ -26,11 +26,16 @@ namespace JunimoServer
 {
     internal class ModEntry : Mod
     {
+        private static readonly string SteamAuthServerAddress =
+            Environment.GetEnvironmentVariable("STEAM_AUTH_IP_PORT") ?? "localhost:8083";
 
-        private static readonly string SteamAuthServerAddress = Environment.GetEnvironmentVariable("STEAM_AUTH_IP_PORT") ?? "localhost:8083";
         private static readonly string DaemonPort = Environment.GetEnvironmentVariable("DAEMON_HTTP_PORT") ?? "8080";
-        private static readonly bool DisableRendering = bool.Parse(Environment.GetEnvironmentVariable("DISABLE_RENDERING") ?? "true");
-        private static readonly bool ForceNewDebugGame = bool.Parse(Environment.GetEnvironmentVariable("FORCE_NEW_DEBUG_GAME") ?? "false");
+
+        private static readonly bool DisableRendering =
+            bool.Parse(Environment.GetEnvironmentVariable("DISABLE_RENDERING") ?? "true");
+
+        private static readonly bool ForceNewDebugGame =
+            bool.Parse(Environment.GetEnvironmentVariable("FORCE_NEW_DEBUG_GAME") ?? "false");
 
         private GameCreatorService _gameCreatorService;
         private GameLoaderService _gameLoaderService;
@@ -58,32 +63,32 @@ namespace JunimoServer
             var backupService = new BackupService(daemonHttpClient, Monitor);
             var backupScheduler = new BackupScheduler(helper, backupService, Monitor);
             var gameTweaker = new GameTweaker(helper);
-            var cabinManager = new CabinManagerService(helper, Monitor, harmony, CabinStrategy.FarmhouseStack);
-            _gameCreatorService = new GameCreatorService(_gameLoaderService, options, Monitor, _daemonService, cabinManager);
+            // var cabinManager = new CabinManagerService(helper, Monitor, harmony, CabinStrategy.FarmhouseStack);
+            // _gameCreatorService =
+            //     new GameCreatorService(_gameLoaderService, options, Monitor, _daemonService, cabinManager);
             var networkTweaker = new NetworkTweaker(helper, options);
-            
+            var desyncKicker = new DesyncKicker(helper, Monitor);
+
             // var steamAuthHttpClient = new HttpClient();
             // steamAuthHttpClient.BaseAddress = new Uri($"http://{SteamAuthServerAddress}");
             // var steamAuthClient = new SteamAuthClient(steamAuthHttpClient, Monitor);
             // var galaxyAuthService = new GalaxyAuthService(Monitor, helper, harmony, steamAuthClient);
 
             var hostBot = new HostBot(helper, Monitor);
-            // CabinCommand.Register(helper, chatCommands, options, Monitor);
+            CabinCommand.Register(helper, chatCommands, options, Monitor);
 
             helper.Events.Display.RenderedActiveMenu += OnRenderedActiveMenu;
-
         }
 
 
         private void OnTitleMenuLaunched()
         {
-
             if (ForceNewDebugGame)
             {
                 var config = new NewGameConfig
                 {
                     WhichFarm = 0,
-                    MaxPlayers = 9999,
+                    MaxPlayers = 4,
                 };
                 _gameCreatorService.CreateNewGame(config);
                 return;
