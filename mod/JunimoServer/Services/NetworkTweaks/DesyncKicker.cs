@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Xna.Framework;
 using Netcode;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
@@ -22,12 +25,13 @@ namespace JunimoServer.Services.NetworkTweaks
             _helper = helper;
             _monitor = monitor;
             _helper.Events.GameLoop.DayEnding += OnDayEnding;
-            _helper.Events.GameLoop.OneSecondUpdateTicked += OnOneSecondTicked;
+            // _helper.Events.GameLoop.OneSecondUpdateTicked += OnOneSecondTicked;
             _helper.Events.GameLoop.Saving += OnSaving;
         }
 
         private void OnSaving(object sender, SavingEventArgs e)
         {
+            LogChecks();
             DisableTimer();
             _monitor.Log("Saving");
         }
@@ -51,24 +55,23 @@ namespace JunimoServer.Services.NetworkTweaks
 
         private void LogChecks()
         {
+            _monitor.Log("-----------------------------------------------------");
+
             var checks = new string[]
             {
                 "ready_for_save",
                 "wakeup"
             };
-            foreach (var check in checks)
-            {
-                foreach (var farmer in Game1.getOnlineFarmers()
-                             .Where(farmer => !Game1.player.team.IsOtherFarmerReady(check, farmer)))
-                {
-                    _monitor.Log($"{farmer.Name}:{farmer.UniqueMultiplayerID} hasn't passed {check}");
-                }
-            }
 
             foreach (var farmer in Game1.getOnlineFarmers())
             {
+                foreach (var check in checks)
+                {
+                    var passedCheck = Game1.player.team.IsOtherFarmerReady(check, farmer);
+                    _monitor.Log($"{farmer.Name}:{farmer.UniqueMultiplayerID} {check}:{passedCheck}");
+                }
                 _monitor.Log(
-                    $"{farmer.Name}:{farmer.UniqueMultiplayerID} end of night status: {Game1.player.team.endOfNightStatus.GetStatusText(farmer.UniqueMultiplayerID)}");
+                    $"{farmer.Name}:{farmer.UniqueMultiplayerID} endOfNightStatus: {Game1.player.team.endOfNightStatus.GetStatusText(farmer.UniqueMultiplayerID)}");
             }
         }
 
@@ -83,6 +86,14 @@ namespace JunimoServer.Services.NetworkTweaks
             _monitor.Log("DayEnding");
 
             _enableTimer = true;
+            Task.Run(() =>
+            {
+                while (_enableTimer)
+                {
+                    LogChecks();
+                    Thread.Sleep(1000);
+                }
+            });
         }
 
         private void KickDesynedPlayers()
