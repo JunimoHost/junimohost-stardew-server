@@ -1168,7 +1168,7 @@ namespace JunimoServer.Services.AlwaysOnServer
                 }
             }
 
-            if (Game1.timeOfDay == 600)
+            if (Game1.timeOfDay == 610)
             {
                 shippingMenuActive = false;
 

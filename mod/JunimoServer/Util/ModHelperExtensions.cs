@@ -8,16 +8,21 @@ namespace JunimoServer.Util
 {
     public static class ModHelperExtensions
     {
+        public static Multiplayer GetMultiplayer(this IModHelper helper)
+        {
+            return helper.Reflection.GetField<Multiplayer>(typeof(Game1), "multiplayer").GetValue();
+        }
+
         public static void SendPublicMessage(this IModHelper helper, string msg)
         {
-            var multiplayer = helper.Reflection.GetField<Multiplayer>(typeof(Game1), "multiplayer").GetValue();
-            multiplayer.sendChatMessage(LocalizedContentManager.CurrentLanguageCode, msg, Multiplayer.AllPlayers);
+            helper.GetMultiplayer()
+                .sendChatMessage(LocalizedContentManager.CurrentLanguageCode, msg, Multiplayer.AllPlayers);
         }
 
         public static void SendPrivateMessage(this IModHelper helper, long uniqueMultiplayerId, string msg)
         {
-            var multiplayer = helper.Reflection.GetField<Multiplayer>(typeof(Game1), "multiplayer").GetValue();
-            multiplayer.sendChatMessage(LocalizedContentManager.CurrentLanguageCode, msg, uniqueMultiplayerId);
+            helper.GetMultiplayer()
+                .sendChatMessage(LocalizedContentManager.CurrentLanguageCode, msg, uniqueMultiplayerId);
         }
 
         public static int GetCurrentNumCabins(this IModHelper helper)

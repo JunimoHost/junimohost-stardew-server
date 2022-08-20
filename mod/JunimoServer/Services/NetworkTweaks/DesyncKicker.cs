@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Netcode;
 using StardewModdingAPI;
@@ -20,13 +22,21 @@ namespace JunimoServer.Services.NetworkTweaks
         private int _desyncTimer = 0;
         private bool _enableTimer = false;
 
-        public DesyncKicker(IModHelper helper, IMonitor monitor)
+        public DesyncKicker(IModHelper helper, IMonitor monitor, Harmony harmony)
         {
             _helper = helper;
             _monitor = monitor;
             _helper.Events.GameLoop.DayEnding += OnDayEnding;
             // _helper.Events.GameLoop.OneSecondUpdateTicked += OnOneSecondTicked;
             _helper.Events.GameLoop.Saving += OnSaving;
+
+            // DesyncKickerOverrides.Initialize(monitor, helper);
+            //
+            // harmony.Patch(
+            //     original: AccessTools.Method(typeof(NewDaySynchronizer), "processMessages"),
+            //     prefix: new HarmonyMethod(typeof(DesyncKickerOverrides),
+            //         nameof(DesyncKickerOverrides.NewDaySynchronizer_processMessages_prefix))
+            // );
         }
 
         private void OnSaving(object sender, SavingEventArgs e)
@@ -70,6 +80,7 @@ namespace JunimoServer.Services.NetworkTweaks
                     var passedCheck = Game1.player.team.IsOtherFarmerReady(check, farmer);
                     _monitor.Log($"{farmer.Name}:{farmer.UniqueMultiplayerID} {check}:{passedCheck}");
                 }
+
                 _monitor.Log(
                     $"{farmer.Name}:{farmer.UniqueMultiplayerID} endOfNightStatus: {Game1.player.team.endOfNightStatus.GetStatusText(farmer.UniqueMultiplayerID)}");
             }
@@ -86,12 +97,28 @@ namespace JunimoServer.Services.NetworkTweaks
             _monitor.Log("DayEnding");
 
             _enableTimer = true;
-            Task.Run(() =>
+            Task.Run(async () =>
             {
-                while (_enableTimer)
+                _monitor.Log("waiting 15 sec to kick");
+
+                await Task.Delay(15 * 1000);
+                _monitor.Log("waited 15 sec to kick");
+
+                if (_enableTimer)
                 {
+                    _monitor.Log("still stuck");
+
                     LogChecks();
-                    Thread.Sleep(1000);
+                    var readyPlayers = _helper.Reflection.GetMethod(Game1.newDaySync, "barrierPlayers")
+                        .Invoke<HashSet<long>>("sleep");
+                    foreach (var key in (IEnumerable<long>)Game1.otherFarmers.Keys)
+                    {
+                        if (!readyPlayers.Contains(key))
+                        {
+                            Game1.server.kick(key);
+                            _monitor.Log("kicking: " + key);
+                        }
+                    }
                 }
             });
         }

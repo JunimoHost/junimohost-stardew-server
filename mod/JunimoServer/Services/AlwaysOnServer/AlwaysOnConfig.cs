@@ -20,7 +20,7 @@ namespace JunimoServer.Services.AlwaysOnServer
         public int GrangeDisplayCountDownConfig { get; set; } = 300;
         public int IceFishingCountDownConfig { get; set; } = 300;
 
-        public int EndOfDayTimeOut { get; set; } = 30;
+        public int EndOfDayTimeOut { get; set; } = 60;
         public int FairTimeOut { get; set; } = 1200;
         public int SpiritsEveTimeOut { get; set; } = 900;
         public int WinterStarTimeOut { get; set; } = 900;
