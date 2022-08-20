@@ -55,10 +55,10 @@ namespace JunimoServer.Services.NetworkTweaks
 
             Task.Run(async () =>
             {
-                _monitor.Log("waiting 20 sec to kick shipping + waiting for others");
+                _monitor.Log("waiting 45 sec to kick shipping + waiting for others");
 
-                await Task.Delay(20 * 1000);
-                _monitor.Log("waited 20 sec to kick shipping + waiting for others");
+                await Task.Delay(45 * 1000);
+                _monitor.Log("waited 45 sec to kick shipping + waiting for others");
                 LogChecks();
                 if (_inReadyForSave)
                 {
@@ -124,7 +124,7 @@ namespace JunimoServer.Services.NetworkTweaks
 
         private void KickDesynedPlayers()
         {
-            foreach (var farmer in Game1.getOnlineFarmers()
+            foreach (var farmer in Game1.otherFarmers.Values
                          .Where(farmer => !Game1.player.team.IsOtherFarmerReady("ready_for_save", farmer)))
             {
                 _monitor.Log($"Kicking {farmer.Name} because they aren't ready_for_save");
