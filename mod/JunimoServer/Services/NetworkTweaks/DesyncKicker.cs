@@ -19,8 +19,8 @@ namespace JunimoServer.Services.NetworkTweaks
 
         private readonly IModHelper _helper;
         private readonly IMonitor _monitor;
-        private int _desyncTimer = 0;
-        private bool _enableTimer = false;
+        private bool _inNewDayBarrier = false;
+        private bool _inReadyForSave = false;
 
         public DesyncKicker(IModHelper helper, IMonitor monitor, Harmony harmony)
         {
@@ -29,6 +29,7 @@ namespace JunimoServer.Services.NetworkTweaks
             _helper.Events.GameLoop.DayEnding += OnDayEnding;
             // _helper.Events.GameLoop.OneSecondUpdateTicked += OnOneSecondTicked;
             _helper.Events.GameLoop.Saving += OnSaving;
+            _helper.Events.GameLoop.Saved += OnSaved;
 
             // DesyncKickerOverrides.Initialize(monitor, helper);
             //
@@ -39,28 +40,31 @@ namespace JunimoServer.Services.NetworkTweaks
             // );
         }
 
+        private void OnSaved(object sender, SavedEventArgs e)
+        {
+            _inReadyForSave = false;
+            _monitor.Log("Saved");
+        }
+
         private void OnSaving(object sender, SavingEventArgs e)
         {
             LogChecks();
-            DisableTimer();
+            _inNewDayBarrier = false;
             _monitor.Log("Saving");
-        }
+            _inReadyForSave = true;
 
-        private void OnOneSecondTicked(object sender, OneSecondUpdateTickedEventArgs e)
-        {
-            if (!_enableTimer) return;
-
-            LogChecks();
-            if (_desyncTimer == DesyncMaxTime)
+            Task.Run(async () =>
             {
-                DisableTimer();
+                _monitor.Log("waiting 20 sec to kick shipping + waiting for others");
 
-                // KickDesynedPlayers();
-            }
-            else
-            {
-                _desyncTimer++;
-            }
+                await Task.Delay(20 * 1000);
+                _monitor.Log("waited 20 sec to kick shipping + waiting for others");
+                LogChecks();
+                if (_inReadyForSave)
+                {
+                    KickDesynedPlayers();
+                }
+            });
         }
 
         private void LogChecks()
@@ -86,27 +90,22 @@ namespace JunimoServer.Services.NetworkTweaks
             }
         }
 
-        private void DisableTimer()
-        {
-            _enableTimer = false;
-            _desyncTimer = 0;
-        }
 
         private void OnDayEnding(object sender, DayEndingEventArgs e)
         {
             _monitor.Log("DayEnding");
 
-            _enableTimer = true;
+            _inNewDayBarrier = true;
             Task.Run(async () =>
             {
-                _monitor.Log("waiting 15 sec to kick");
+                _monitor.Log("waiting 20 sec to kick barrier");
 
-                await Task.Delay(15 * 1000);
-                _monitor.Log("waited 15 sec to kick");
+                await Task.Delay(20 * 1000);
+                _monitor.Log("waited 20 sec to kick barrier");
 
-                if (_enableTimer)
+                if (_inNewDayBarrier)
                 {
-                    _monitor.Log("still stuck");
+                    _monitor.Log("still stuck in barrier, going to try kicking");
 
                     LogChecks();
                     var readyPlayers = _helper.Reflection.GetMethod(Game1.newDaySync, "barrierPlayers")
