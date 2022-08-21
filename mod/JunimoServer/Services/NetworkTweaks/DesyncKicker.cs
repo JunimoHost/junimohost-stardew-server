@@ -42,8 +42,10 @@ namespace JunimoServer.Services.NetworkTweaks
 
         private void OnSaved(object sender, SavedEventArgs e)
         {
+
             _inReadyForSave = false;
             _monitor.Log("Saved");
+            LogChecks();
         }
 
         private void OnSaving(object sender, SavingEventArgs e)
@@ -62,7 +64,7 @@ namespace JunimoServer.Services.NetworkTweaks
                 LogChecks();
                 if (_inReadyForSave)
                 {
-                    KickDesynedPlayers();
+                    KickDesyncedPlayers();
                 }
             });
         }
@@ -122,9 +124,9 @@ namespace JunimoServer.Services.NetworkTweaks
             });
         }
 
-        private void KickDesynedPlayers()
+        private void KickDesyncedPlayers()
         {
-            foreach (var farmer in Game1.otherFarmers.Values
+            foreach (var farmer in Game1.otherFarmers.Values.ToArray()
                          .Where(farmer => !Game1.player.team.IsOtherFarmerReady("ready_for_save", farmer)))
             {
                 _monitor.Log($"Kicking {farmer.Name} because they aren't ready_for_save");
