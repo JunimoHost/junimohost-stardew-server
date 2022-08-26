@@ -63,9 +63,9 @@ namespace JunimoServer
             var backupService = new BackupService(daemonHttpClient, Monitor);
             var backupScheduler = new BackupScheduler(helper, backupService, Monitor);
             var gameTweaker = new GameTweaker(helper);
-            // var cabinManager = new CabinManagerService(helper, Monitor, harmony, CabinStrategy.FarmhouseStack);
-            // _gameCreatorService =
-            // new GameCreatorService(_gameLoaderService, options, Monitor, _daemonService, cabinManager);
+            var cabinManager = new CabinManagerService(helper, Monitor, harmony, CabinStrategy.FarmhouseStack);
+            _gameCreatorService =
+            new GameCreatorService(_gameLoaderService, options, Monitor, _daemonService, cabinManager);
             var networkTweaker = new NetworkTweaker(helper, options);
             var desyncKicker = new DesyncKicker(helper, Monitor, harmony);
 

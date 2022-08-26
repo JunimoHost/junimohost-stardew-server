@@ -4,10 +4,12 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using HarmonyLib;
+using JunimoServer.Util;
 using Microsoft.Xna.Framework;
 using Netcode;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
+using StardewModdingAPI.Utilities;
 using StardewValley;
 using StardewValley.Network;
 
@@ -20,7 +22,7 @@ namespace JunimoServer.Services.NetworkTweaks
         private readonly IModHelper _helper;
         private readonly IMonitor _monitor;
         private bool _inNewDayBarrier = false;
-        private bool _inReadyForSave = false;
+        private bool _isSaving = false;
 
         public DesyncKicker(IModHelper helper, IMonitor monitor, Harmony harmony)
         {
@@ -30,6 +32,7 @@ namespace JunimoServer.Services.NetworkTweaks
             // _helper.Events.GameLoop.OneSecondUpdateTicked += OnOneSecondTicked;
             _helper.Events.GameLoop.Saving += OnSaving;
             _helper.Events.GameLoop.Saved += OnSaved;
+            helper.Events.Specialized.UnvalidatedUpdateTicked += OnUnvalidatedTicked;
 
             // DesyncKickerOverrides.Initialize(monitor, helper);
             //
@@ -39,11 +42,18 @@ namespace JunimoServer.Services.NetworkTweaks
             //         nameof(DesyncKickerOverrides.NewDaySynchronizer_processMessages_prefix))
             // );
         }
+        private void OnUnvalidatedTicked(object sender, UnvalidatedUpdateTickedEventArgs e)
+        {
+            if (_inNewDayBarrier || _isSaving)
+            {
+                LogChecks();
+            }
+        }
 
         private void OnSaved(object sender, SavedEventArgs e)
         {
 
-            _inReadyForSave = false;
+            _isSaving = false;
             _monitor.Log("Saved");
             LogChecks();
         }
@@ -53,7 +63,7 @@ namespace JunimoServer.Services.NetworkTweaks
             LogChecks();
             _inNewDayBarrier = false;
             _monitor.Log("Saving");
-            _inReadyForSave = true;
+            _isSaving = true;
 
             Task.Run(async () =>
             {
@@ -62,7 +72,7 @@ namespace JunimoServer.Services.NetworkTweaks
                 await Task.Delay(45 * 1000);
                 _monitor.Log("waited 45 sec to kick shipping + waiting for others");
                 LogChecks();
-                if (_inReadyForSave)
+                if (_isSaving)
                 {
                     KickDesyncedPlayers();
                 }
@@ -95,6 +105,7 @@ namespace JunimoServer.Services.NetworkTweaks
 
         private void OnDayEnding(object sender, DayEndingEventArgs e)
         {
+            if (SDate.Now().IsDayZero()) return;
             _monitor.Log("DayEnding");
 
             _inNewDayBarrier = true;

@@ -8,5 +8,10 @@ namespace JunimoServer.Util
         {
             return date.Day == otherDate.Day && date.Season == otherDate.Season;
         }
+        
+        public static bool IsDayZero(this SDate date)
+        {
+            return date.Day == 0 && date.Season == "spring" && date.Year == 1;
+        }
     }
 }
