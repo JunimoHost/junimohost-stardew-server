@@ -128,7 +128,7 @@ namespace JunimoServer.Services.NetworkTweaks
                         if (!readyPlayers.Contains(key))
                         {
                             Game1.server.kick(key);
-                            _monitor.Log("kicking: " + key);
+                            _monitor.Log("kicking due to not making past barrier: " + key);
                         }
                     }
                 }
@@ -138,9 +138,9 @@ namespace JunimoServer.Services.NetworkTweaks
         private void KickDesyncedPlayers()
         {
             foreach (var farmer in Game1.otherFarmers.Values.ToArray()
-                         .Where(farmer => !Game1.player.team.IsOtherFarmerReady("ready_for_save", farmer)))
+                         .Where(farmer => Game1.player.team.endOfNightStatus.GetStatusText(farmer.UniqueMultiplayerID) != "ready"))
             {
-                _monitor.Log($"Kicking {farmer.Name} because they aren't ready_for_save");
+                _monitor.Log($"Kicking {farmer.Name} because they aren't ready");
                 Game1.server.kick(farmer.UniqueMultiplayerID);
             }
         }
