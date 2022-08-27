@@ -1,77 +1,53 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using HarmonyLib;
 using JunimoServer.Util;
-using Microsoft.Xna.Framework;
-using Netcode;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley;
-using StardewValley.Network;
 
 namespace JunimoServer.Services.NetworkTweaks
 {
     public class DesyncKicker
     {
-        private const int DesyncMaxTime = 20;
+        private const int barrierDesyncMaxTime = 20;
+        private const int endOfDayDesyncMaxTime = 60;
 
         private readonly IModHelper _helper;
         private readonly IMonitor _monitor;
         private bool _inNewDayBarrier = false;
         private bool _isSaving = false;
 
-        public DesyncKicker(IModHelper helper, IMonitor monitor, Harmony harmony)
+        public DesyncKicker(IModHelper helper, IMonitor monitor)
         {
             _helper = helper;
             _monitor = monitor;
             _helper.Events.GameLoop.DayEnding += OnDayEnding;
-            // _helper.Events.GameLoop.OneSecondUpdateTicked += OnOneSecondTicked;
             _helper.Events.GameLoop.Saving += OnSaving;
             _helper.Events.GameLoop.Saved += OnSaved;
-            helper.Events.Specialized.UnvalidatedUpdateTicked += OnUnvalidatedTicked;
 
-            // DesyncKickerOverrides.Initialize(monitor, helper);
-            //
-            // harmony.Patch(
-            //     original: AccessTools.Method(typeof(NewDaySynchronizer), "processMessages"),
-            //     prefix: new HarmonyMethod(typeof(DesyncKickerOverrides),
-            //         nameof(DesyncKickerOverrides.NewDaySynchronizer_processMessages_prefix))
-            // );
-        }
-        private void OnUnvalidatedTicked(object sender, UnvalidatedUpdateTickedEventArgs e)
-        {
-            if (_inNewDayBarrier || _isSaving)
-            {
-                LogChecks();
-            }
         }
 
         private void OnSaved(object sender, SavedEventArgs e)
         {
 
             _isSaving = false;
-            _monitor.Log("Saved");
-            LogChecks();
         }
 
         private void OnSaving(object sender, SavingEventArgs e)
         {
-            LogChecks();
             _inNewDayBarrier = false;
             _monitor.Log("Saving");
             _isSaving = true;
 
             Task.Run(async () =>
             {
-                _monitor.Log("waiting 45 sec to kick shipping + waiting for others");
+                _monitor.Log($"waiting {endOfDayDesyncMaxTime} sec to kick non-ready players");
 
-                await Task.Delay(45 * 1000);
-                _monitor.Log("waited 45 sec to kick shipping + waiting for others");
-                LogChecks();
+                await Task.Delay(endOfDayDesyncMaxTime * 1000);
+                _monitor.Log($"waited {endOfDayDesyncMaxTime} sec to kick non-ready players");
                 if (_isSaving)
                 {
                     KickDesyncedPlayers();
@@ -111,16 +87,15 @@ namespace JunimoServer.Services.NetworkTweaks
             _inNewDayBarrier = true;
             Task.Run(async () =>
             {
-                _monitor.Log("waiting 20 sec to kick barrier");
+                _monitor.Log($"waiting {barrierDesyncMaxTime} sec to kick barrier");
 
-                await Task.Delay(20 * 1000);
-                _monitor.Log("waited 20 sec to kick barrier");
+                await Task.Delay(barrierDesyncMaxTime * 1000);
+                _monitor.Log($"waited {barrierDesyncMaxTime} sec to kick barrier");
 
                 if (_inNewDayBarrier)
                 {
                     _monitor.Log("still stuck in barrier, going to try kicking");
 
-                    LogChecks();
                     var readyPlayers = _helper.Reflection.GetMethod(Game1.newDaySync, "barrierPlayers")
                         .Invoke<HashSet<long>>("sleep");
                     foreach (var key in (IEnumerable<long>)Game1.otherFarmers.Keys)

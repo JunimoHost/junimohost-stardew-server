@@ -100,7 +100,6 @@ namespace JunimoServer.Services.GameCreator
             
             _cabinManagerService.SetDefaultCabinLocation(cabinLocation);
             _cabinManagerService.MoveCabinToHiddenStack(initialCabin);
-            _cabinManagerService.EnsureAtLeastXCabins();
 
 
             GameIsCreating = false;
