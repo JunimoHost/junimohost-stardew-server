@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using System;
+using HarmonyLib;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
@@ -21,6 +22,8 @@ namespace JunimoServer.Services.ServerOptim
 
             helper.Events.GameLoop.DayStarted += OnDayStarted;
             helper.Events.GameLoop.Saving += OnSaving;
+
+            GameRunner.instance.TargetElapsedTime = TimeSpan.FromSeconds(1.0f / 20.0f);
 
         }
 
