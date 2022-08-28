@@ -15,7 +15,7 @@ else
 	cd mod && dotnet build -o ./build --configuration Release "/p:EnableModZip=false;EnableModDeploy=false"
 endif
 	mkdir -p ./docker/mods/JunimoServer
-	cp ./mod/build/JunimoServer.dll ./mod/build/JunimoServer.pdb ./mod/build/MimeTypesMap.dll ./mod/JunimoServer/manifest.json ./docker/mods/JunimoServer
+	cp ./mod/build/JunimoServer.dll ./mod/build/JunimoServer.pdb ./mod/JunimoServer/manifest.json ./docker/mods/JunimoServer
 
 docker/game-daemon: $(shell find daemon -type f)
 	cd daemon && GOOS=linux GOARCH=amd64 go build -o ../docker/game-daemon ./cmd/daemon/daemon.go
