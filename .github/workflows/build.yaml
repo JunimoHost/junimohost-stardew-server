@@ -21,15 +21,15 @@ jobs:
         run: |-
           tar -zxf stardew.tar.gz
 
-      - name: Download SMAPI 3.16.0
+      - name: Download SMAPI 3.16.2
         uses: wei/wget@v1
         with:
-          args: -O smapi.zip https://github.com/Pathoschild/SMAPI/releases/download/3.16.0/SMAPI-3.16.0-installer.zip
+          args: -O smapi.zip https://github.com/Pathoschild/SMAPI/releases/download/3.16.2/SMAPI-3.16.2-installer.zip
 
       - name: Install SMAPI
         run: |-
           unzip -qq smapi.zip -d ./smapi
-          echo -e "2\n\n" | ./smapi/SMAPI\ 3.16.0\ installer/internal/linux/SMAPI.Installer --install --game-path "/home/runner/work/junimohost-stardew-server/junimohost-stardew-server/Stardew Valley"
+          echo -e "2\n\n" | ./smapi/SMAPI\ 3.16.2\ installer/internal/linux/SMAPI.Installer --install --game-path "/home/runner/work/junimohost-stardew-server/junimohost-stardew-server/Stardew Valley"
         continue-on-error: true # runs installer twice for some reason, fails on second time, but succeeds on first
 
       - uses: actions/setup-go@v3
