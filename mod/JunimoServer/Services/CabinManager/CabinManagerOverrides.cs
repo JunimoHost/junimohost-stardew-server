@@ -44,7 +44,7 @@ namespace JunimoServer.Services.CabinManager
 
             foreach (var cabins in allCabins)
             {
-                var indoor = (Cabin) cabins.indoors.Value;
+                var indoor = (Cabin)cabins.indoors.Value;
                 _monitor.Log($"cabin: {indoor.NameOrUniqueName}");
                 foreach (var warp in indoor.warps)
                 {
@@ -96,15 +96,19 @@ namespace JunimoServer.Services.CabinManager
 
             //select the player's cabin if its in the hidden stack
             var cabinsToMove = allCabins
-                .Where(building => ((Cabin) building.indoors.Value).owner.UniqueMultiplayerID == playerId)
-                .Where(building => building.tileX.Value == CabinManagerService.HiddenCabinX
-                                   && building.tileY.Value == CabinManagerService.HiddenCabinY)
+                .Where(building => ((Cabin)building.indoors.Value).owner.UniqueMultiplayerID == playerId)
+                .Where(IsBuildingInHiddenStack)
                 .ToArray();
 
             return cabinsToMove;
         }
 
-        public static List<OriginalBuildingCoord> MoveCabinsAway(long playerId, Vector2? cabinStackLocation)
+        public static bool IsBuildingInHiddenStack(Building building)
+        {
+            return building.tileX.Value == CabinManagerService.HiddenCabinX
+                   && building.tileY.Value == CabinManagerService.HiddenCabinY;
+        }
+        public static List<OriginalBuildingCoord> MoveCabinsAway(long playerId, Vector2 cabinStackLocation)
         {
             var farm = Game1.getFarm();
             var movedBuildings = new List<OriginalBuildingCoord>();
@@ -117,9 +121,10 @@ namespace JunimoServer.Services.CabinManager
                 {
                     var original = new OriginalBuildingCoord(building, building.tileX.Value, building.tileY.Value);
                     movedBuildings.Add(original);
-                    var indoor = (Cabin) building.indoors.Value;
+                    var indoor = (Cabin)building.indoors.Value;
                     foreach (var warp in indoor.warps)
                     {
+                        if (warp.TargetName != "Farm") continue;
                         warp.TargetX = farm.GetMainFarmHouseEntry().X;
                         warp.TargetY = farm.GetMainFarmHouseEntry().Y;
                     }
@@ -128,31 +133,59 @@ namespace JunimoServer.Services.CabinManager
                 return movedBuildings;
             }
             // CabinStack Strategy
+            var ownerCabin = Game1.getFarm().buildings.First(building => building.isCabin);
 
-            var stackX = cabinStackLocation?.X != null
-                ? (int) Math.Round(cabinStackLocation.Value.X, 0)
-                : 20;
-            var stackY = cabinStackLocation?.Y != null
-                ? (int) Math.Round(cabinStackLocation.Value.Y, 0)
-                : 20;
+            var stackX = (int)Math.Round(cabinStackLocation.X, 0);
+            var stackY = (int)Math.Round(cabinStackLocation.Y, 0);
+
+            if (cabinsToMove.Length == 0)
+            {
+                var lastStackedCabin = Game1.getFarm().buildings.Last(IsBuildingInHiddenStack);
+
+                cabinsToMove = new[]
+                {
+                    lastStackedCabin
+                };
+            }
 
             foreach (var building in cabinsToMove)
             {
                 var original = new OriginalBuildingCoord(building, building.tileX.Value, building.tileY.Value);
                 movedBuildings.Add(original);
 
+                if (building == ownerCabin)
+                {
+                    var ownerIndoor = (Cabin)building.indoors.Value;
+                    foreach (var warp in ownerIndoor.warps)
+                    {
+                        if (warp.TargetName != "Farm") continue;
+                        warp.TargetX = farm.GetMainFarmHouseEntry().X;
+                        warp.TargetY = farm.GetMainFarmHouseEntry().Y;
+                    }
+                    continue;
+                }
+
                 building.tileX.Value = stackX;
                 building.tileY.Value = stackY;
 
-                var indoor = (Cabin) building.indoors.Value;
+                var indoor = (Cabin)building.indoors.Value;
                 foreach (var warp in indoor.warps)
                 {
+                    if (warp.TargetName != "Farm") continue;
+
                     warp.TargetX = stackX + 2;
                     warp.TargetY = stackY + 2;
                 }
             }
 
             return movedBuildings;
+        }
+        private static Vector2 GetStackLocation()
+        {
+            var initialCabin = Game1.getFarm().buildings.First(building => building.isCabin);
+            var cabinLocation = new Vector2(initialCabin.tileX.Value, initialCabin.tileY.Value);
+            var stackLocation = _cabinManagerData.DefaultCabinLocation ?? cabinLocation;
+            return stackLocation;
         }
 
         public static void MoveCabinsHome(List<OriginalBuildingCoord> originalBuildingCoords)
@@ -173,7 +206,7 @@ namespace JunimoServer.Services.CabinManager
         public static void sendLocation_Prefix(GameServer __instance, long peer, GameLocation location,
             bool force_current, out List<OriginalBuildingCoord> __state)
         {
-            __state = MoveCabinsAway(peer, _cabinManagerData.DefaultCabinLocation);
+            __state = MoveCabinsAway(peer, GetStackLocation());
         }
 
         public static void sendLocation_Postfix(GameServer __instance, long peer, GameLocation location,
@@ -205,7 +238,7 @@ namespace JunimoServer.Services.CabinManager
                     var farm = Game1.getFarm();
 
 
-                    var movedBuildings = MoveCabinsAway(f.UniqueMultiplayerID, _cabinManagerData.DefaultCabinLocation);
+                    var movedBuildings = MoveCabinsAway(f.UniqueMultiplayerID, GetStackLocation());
 
                     byte[] data = __instance.writeObjectDeltaBytes(farm.Root as NetRoot<GameLocation>);
 
@@ -213,9 +246,7 @@ namespace JunimoServer.Services.CabinManager
 
                     OutgoingMessage forgedMessage = new OutgoingMessage(6, Game1.player, new object[]
                     {
-                        loc.isStructure.Value,
-                        loc.isStructure ? loc.uniqueName.Value : loc.name.Value,
-                        data
+                        loc.isStructure.Value, loc.isStructure ? loc.uniqueName.Value : loc.name.Value, data
                     });
 
 

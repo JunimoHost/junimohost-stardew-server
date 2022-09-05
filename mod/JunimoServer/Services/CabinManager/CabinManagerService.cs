@@ -29,8 +29,8 @@ namespace JunimoServer.Services.CabinManager
         private readonly IModHelper _helper;
         private readonly IMonitor _monitor;
         private CabinManagerData data = new CabinManagerData();
-        private const string CabinManagerDataKey = "JunimoHost.CabinManager.data";
-        private const int MinEmptyCabins = 4;
+        private const string cabinManagerDataKey = "JunimoHost.CabinManager.data";
+        private const int minEmptyCabins = 4;
         public const int HiddenCabinX = -20;
         public const int HiddenCabinY = -20;
 
@@ -74,7 +74,7 @@ namespace JunimoServer.Services.CabinManager
                 postfix: new HarmonyMethod(typeof(CabinManagerOverrides),
                     nameof(CabinManagerOverrides.sendLocation_Postfix))
             );
-            
+
             harmony.Patch(
                 original: AccessTools.Method(typeof(GameServer), nameof(GameServer.sendServerIntroduction)),
                 postfix: new HarmonyMethod(typeof(CabinManagerOverrides),
@@ -84,23 +84,21 @@ namespace JunimoServer.Services.CabinManager
         private void OnServerJoined(long peerId)
         {
             data.AllPlayerIdsEverJoined.Add(peerId);
-            _helper.Data.WriteSaveData(CabinManagerDataKey, data);
+            _helper.Data.WriteSaveData(cabinManagerDataKey, data);
             EnsureAtLeastXCabins();
         }
 
 
         private void OnTicked(object sender, UpdateTickedEventArgs e)
         {
-            if (_strategy == CabinStrategy.FarmhouseStack)
-            {
-                MonitorFarmhouse();
-            }
+
+            MonitorFarmhouse();
         }
-        
+
         private void MonitorFarmhouse()
         {
             if (!Game1.hasLoadedGame) return;
-            
+
             var idsInFarmHouse = Game1.getLocationFromName("Farmhouse").farmers
                 .Select(farmer => farmer.UniqueMultiplayerID)
                 .ToHashSet();
@@ -122,39 +120,41 @@ namespace JunimoServer.Services.CabinManager
         {
             if (farmer.UniqueMultiplayerID == Game1.player.UniqueMultiplayerID) return;
 
-            var farmersCabin = Game1.getFarm().buildings.First(building =>
-                building.isCabin && ((Cabin) building.indoors.Value).owner.UniqueMultiplayerID ==
-                farmer.UniqueMultiplayerID);
+
+            Building farmersCabin;
+            if (_strategy == CabinStrategy.FarmhouseStack)
+            {
+                farmersCabin = Game1.getFarm().buildings.First(building =>
+                    building.isCabin && ((Cabin)building.indoors.Value).owner.UniqueMultiplayerID ==
+                    farmer.UniqueMultiplayerID);
+            }
+            else
+            {
+                farmersCabin = Game1.getFarm().buildings.First(building => building.isCabin);
+            }
+
+
             var farmersCabinUniqueLocation = farmersCabin.nameOfIndoors;
             var farmersCabinEntrypoint = ((Cabin)farmersCabin.indoors.Value).getEntryLocation();
-            
+
             // Pass out request
             Game1.server.sendMessage(farmer.UniqueMultiplayerID, 29, Game1.player, new object[]
             {
-                farmersCabinUniqueLocation,
-                farmersCabinEntrypoint.X,
-                farmersCabinEntrypoint.Y,
-                true
+                farmersCabinUniqueLocation, farmersCabinEntrypoint.X, farmersCabinEntrypoint.Y, true
             });
         }
 
-        private Vector2 GetStackLocation()
-        {
-            var initialCabin = Game1.getFarm().buildings.First(building => building.isCabin);
-            var cabinLocation = new Vector2(initialCabin.tileX.Value, initialCabin.tileY.Value);
-            var stackLocation = data.DefaultCabinLocation ?? cabinLocation;
-            return stackLocation;
-        }
+
 
         private void OnSaveLoaded(object sender, SaveLoadedEventArgs e)
         {
-            data = _helper.Data.ReadSaveData<CabinManagerData>(CabinManagerDataKey) ?? new CabinManagerData();
+            data = _helper.Data.ReadSaveData<CabinManagerData>(cabinManagerDataKey) ?? new CabinManagerData();
         }
 
         public void SetDefaultCabinLocation(Vector2 location)
         {
             data.DefaultCabinLocation = location;
-            _helper.Data.WriteSaveData(CabinManagerDataKey, data);
+            _helper.Data.WriteSaveData(cabinManagerDataKey, data);
         }
 
         public void MoveCabinToHiddenStack(Building cabin)
@@ -172,11 +172,11 @@ namespace JunimoServer.Services.CabinManager
             var numEmptyCabins = Game1.getFarm().buildings.Where(building => building.isCabin)
                 .Count(cabin =>
                     !data.AllPlayerIdsEverJoined.Contains(
-                        ((Cabin) cabin.indoors.Value).farmhand.Value.UniqueMultiplayerID)
+                        ((Cabin)cabin.indoors.Value).farmhand.Value.UniqueMultiplayerID)
                 );
 
 
-            var cabinsToBuild = MinEmptyCabins - numEmptyCabins;
+            var cabinsToBuild = minEmptyCabins - numEmptyCabins;
             if (cabinsToBuild <= 0) return;
 
             for (var i = 0; i < cabinsToBuild; i++)
