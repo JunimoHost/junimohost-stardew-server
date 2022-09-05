@@ -87,15 +87,11 @@ namespace JunimoServer.Services.CabinManager
             }
         }
 
-        public static Building[] GetCabinsToMove(long playerId, Vector2? cabinStackLocation)
+        public static Building[] GetCabinsToMove(long playerId)
         {
-            var farm = Game1.getFarm();
-            var buildings = farm.buildings;
-            var allCabins = buildings.Where(building =>
-                building.isCabin).ToArray();
-
             //select the player's cabin if its in the hidden stack
-            var cabinsToMove = allCabins
+            var cabinsToMove = Game1.getFarm().buildings
+                .Where(building => building.isCabin)
                 .Where(building => ((Cabin)building.indoors.Value).owner.UniqueMultiplayerID == playerId)
                 .Where(IsBuildingInHiddenStack)
                 .ToArray();
@@ -112,8 +108,7 @@ namespace JunimoServer.Services.CabinManager
         {
             var farm = Game1.getFarm();
             var movedBuildings = new List<OriginalBuildingCoord>();
-            var cabinsToMove = GetCabinsToMove(playerId, cabinStackLocation);
-
+            var cabinsToMove = GetCabinsToMove(playerId);
 
             if (_strategy == CabinStrategy.FarmhouseStack)
             {
@@ -122,9 +117,8 @@ namespace JunimoServer.Services.CabinManager
                     var original = new OriginalBuildingCoord(building, building.tileX.Value, building.tileY.Value);
                     movedBuildings.Add(original);
                     var indoor = (Cabin)building.indoors.Value;
-                    foreach (var warp in indoor.warps)
+                    foreach (var warp in indoor.warps.Where(warp => warp.TargetName == "Farm"))
                     {
-                        if (warp.TargetName != "Farm") continue;
                         warp.TargetX = farm.GetMainFarmHouseEntry().X;
                         warp.TargetY = farm.GetMainFarmHouseEntry().Y;
                     }
@@ -138,7 +132,8 @@ namespace JunimoServer.Services.CabinManager
             var stackX = (int)Math.Round(cabinStackLocation.X, 0);
             var stackY = (int)Math.Round(cabinStackLocation.Y, 0);
 
-            if (cabinsToMove.Length == 0)
+            // make sure a cabin is in the stack if player's cabin was moved out of it so they dont see nothing
+            if (cabinsToMove.Length == 0 || playerId == ((Cabin)ownerCabin.indoors.Value).owner.UniqueMultiplayerID)
             {
                 var lastStackedCabin = Game1.getFarm().buildings.Last(IsBuildingInHiddenStack);
 
@@ -147,32 +142,26 @@ namespace JunimoServer.Services.CabinManager
                     lastStackedCabin
                 };
             }
+            
+            // handle updating owner cabin warp to outside
+            foreach (var warp in ((Cabin)ownerCabin.indoors.Value).warps.Where(warp => warp.TargetName == "Farm"))
+            {
+                warp.TargetX = farm.GetMainFarmHouseEntry().X;
+                warp.TargetY = farm.GetMainFarmHouseEntry().Y;
+            }
 
+            // handle normal cabins
             foreach (var building in cabinsToMove)
             {
                 var original = new OriginalBuildingCoord(building, building.tileX.Value, building.tileY.Value);
                 movedBuildings.Add(original);
-
-                if (building == ownerCabin)
-                {
-                    var ownerIndoor = (Cabin)building.indoors.Value;
-                    foreach (var warp in ownerIndoor.warps)
-                    {
-                        if (warp.TargetName != "Farm") continue;
-                        warp.TargetX = farm.GetMainFarmHouseEntry().X;
-                        warp.TargetY = farm.GetMainFarmHouseEntry().Y;
-                    }
-                    continue;
-                }
-
+                
                 building.tileX.Value = stackX;
                 building.tileY.Value = stackY;
 
                 var indoor = (Cabin)building.indoors.Value;
-                foreach (var warp in indoor.warps)
+                foreach (var warp in indoor.warps.Where(warp => warp.TargetName == "Farm"))
                 {
-                    if (warp.TargetName != "Farm") continue;
-
                     warp.TargetX = stackX + 2;
                     warp.TargetY = stackY + 2;
                 }
