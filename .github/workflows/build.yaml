@@ -29,7 +29,7 @@ jobs:
       - name: Install SMAPI
         run: |-
           unzip -qq smapi.zip -d ./smapi
-          echo -e "2\n\n" | ./smapi/SMAPI\ 3.16.2\ installer/internal/linux/SMAPI.Installer --install --game-path "/home/runner/work/junimohost-stardew-server/junimohost-stardew-server/Stardew Valley"
+          echo -e "2\n\n" | ./smapi/SMAPI\ 3.16.2\ installer/internal/linux/SMAPI.Installer --install --game-path "/home/runner/actions-runner/_work/junimohost-stardew-server/junimohost-stardew-server/Stardew Valley"
         continue-on-error: true # runs installer twice for some reason, fails on second time, but succeeds on first
 
       - uses: actions/setup-go@v3
