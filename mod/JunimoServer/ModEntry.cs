@@ -75,7 +75,7 @@ namespace JunimoServer
             // var galaxyAuthService = new GalaxyAuthService(Monitor, helper, harmony, steamAuthClient);
 
             var hostBot = new HostBot(helper, Monitor);
-            // CabinCommand.Register(helper, chatCommands, options, Monitor);
+            CabinCommand.Register(helper, chatCommands, options, Monitor);
 
             helper.Events.Display.RenderedActiveMenu += OnRenderedActiveMenu;
         }

@@ -6,6 +6,7 @@ using JunimoServer.Util;
 using Microsoft.Xna.Framework;
 using StardewModdingAPI;
 using StardewValley;
+using StardewValley.Locations;
 
 namespace JunimoServer.Services.Commands
 {
@@ -15,42 +16,22 @@ namespace JunimoServer.Services.Commands
             PersistentOptions options, IMonitor monitor)
         {
             chatCommandApi.RegisterCommand("cabin",
-                "!cabin plank|log|stone places a cabin right of player's location.\nThis will clear basic debris to make space.",
+                "!cabin moves your cabin to the right of your location.\nThis will clear basic debris to make space.",
                 (args, msg) =>
                 {
-                    var numExistingCabins = helper.GetCurrentNumCabins();
-                    var numTotalCabins = options.Data.MaxPlayers;
-
-                    monitor.Log($"\nnumExistingCabins: {numExistingCabins}\nnumTotalCabins: {numTotalCabins}");
-
-                    if (numExistingCabins >= numTotalCabins)
-                    {
-                        helper.SendPublicMessage($"Build Failed: Player/Cabin limit of {numTotalCabins} reached.");
-                        return;
-                    }
-
-                    string[] cabinTypes = {"Plank", "Log", "Stone"};
-                    var cabinType = cabinTypes[new Random().Next(cabinTypes.Length)];
-                    var cabinChoice = args.Length > 0 ? args[0].ToLower() : "";
-
-                    cabinType = cabinChoice switch
-                    {
-                        "log" => "Log",
-                        "stone" => "Stone",
-                        "plank" => "Plank",
-                        _ => cabinType
-                    };
-                    
-                    monitor.Log($"\ncabinChoice: {cabinChoice}\ncabinType: {cabinType}");
-
 
                     var fromPlayer = Game1.getOnlineFarmers()
                         .First(farmer => farmer.UniqueMultiplayerID == msg.SourceFarmer);
 
-                    var cabinBlueprint = new BluePrint($"{cabinType} Cabin");
+                    if (fromPlayer.currentLocation.Equals(Game1.getLocationFromName("Farm")))
+                    {
+                        helper.SendPrivateMessage(msg.SourceFarmer, "Must be on Farm to move your cabin.");
+                        return;
+                    }
+                    
+                    var cabinBlueprint = new BluePrint("Log Cabin");
                     var cabinLocation = new Vector2(fromPlayer.getTileX() + 1, fromPlayer.getTileY());
 
-                    var isBuildableArea = true;
                     for (var x = 0; x < cabinBlueprint.tilesWidth; x++)
                     {
                         for (var y = 0; y < cabinBlueprint.tilesHeight; y++)
@@ -60,27 +41,19 @@ namespace JunimoServer.Services.Commands
                             fromPlayer.currentLocation.terrainFeatures.Remove(currentTileLocation);
                             fromPlayer.currentLocation.objects.Remove(currentTileLocation);
 
-                            if (!Game1.getFarm().isBuildable(currentTileLocation))
-                            {
-                                isBuildableArea = false;
-                            }
                         }
                     }
 
-                    var shouldSkipSafetyCheck = isBuildableArea;
+                    var farmersCabin = Game1.getFarm().buildings.First(building => building.isCabin && ((Cabin)(building.indoors.Value)).owner.UniqueMultiplayerID == msg.SourceFarmer);
+                    farmersCabin.tileX.Value = (int)cabinLocation.X;
+                    farmersCabin.tileY.Value = (int)cabinLocation.Y;
 
-                    if (Game1.getFarm().buildStructure(cabinBlueprint, cabinLocation, Game1.player,
-                            skipSafetyChecks: shouldSkipSafetyCheck))
+                    var indoor = (Cabin)farmersCabin.indoors.Value;
+                    foreach (var warp in indoor.warps.Where(warp => warp.TargetName == "Farm"))
                     {
-                        Game1.getFarm().buildings.Last().daysOfConstructionLeft.Value = 0;
-                        helper.SendPublicMessage(
-                            $"Build Succeeded: Cabin {numExistingCabins + 1} of {numTotalCabins} constructed.");
+                        warp.TargetX = (int)cabinLocation.X + 2;
+                        warp.TargetY = (int)cabinLocation.Y + 2;
                     }
-                    else
-                    {
-                        helper.SendPublicMessage("Build Failed: Invalid Area.");
-                    }
-
                 }
             );
         }

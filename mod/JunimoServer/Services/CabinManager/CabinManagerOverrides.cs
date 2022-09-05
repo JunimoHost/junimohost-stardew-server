@@ -135,14 +135,19 @@ namespace JunimoServer.Services.CabinManager
             // make sure a cabin is in the stack if player's cabin was moved out of it so they dont see nothing
             if (cabinsToMove.Length == 0 || playerId == ((Cabin)ownerCabin.indoors.Value).owner.UniqueMultiplayerID)
             {
-                var lastStackedCabin = Game1.getFarm().buildings.Last(IsBuildingInHiddenStack);
+                var firstNonOwnerStackedCabin = Game1.getFarm().buildings
+                                           .FirstOrDefault(building =>
+                                               building.isCabin
+                                               && IsBuildingInHiddenStack(building)
+                                               && building != ownerCabin)
+                                       ?? ownerCabin;
 
                 cabinsToMove = new[]
                 {
-                    lastStackedCabin
+                    firstNonOwnerStackedCabin
                 };
             }
-            
+
             // handle updating owner cabin warp to outside
             foreach (var warp in ((Cabin)ownerCabin.indoors.Value).warps.Where(warp => warp.TargetName == "Farm"))
             {
@@ -153,9 +158,11 @@ namespace JunimoServer.Services.CabinManager
             // handle normal cabins
             foreach (var building in cabinsToMove)
             {
+                if (building == ownerCabin) continue;
+
                 var original = new OriginalBuildingCoord(building, building.tileX.Value, building.tileY.Value);
                 movedBuildings.Add(original);
-                
+
                 building.tileX.Value = stackX;
                 building.tileY.Value = stackY;
 
@@ -171,9 +178,15 @@ namespace JunimoServer.Services.CabinManager
         }
         private static Vector2 GetStackLocation()
         {
-            var initialCabin = Game1.getFarm().buildings.First(building => building.isCabin);
-            var cabinLocation = new Vector2(initialCabin.tileX.Value, initialCabin.tileY.Value);
-            var stackLocation = _cabinManagerData.DefaultCabinLocation ?? cabinLocation;
+
+            var nonHiddenCabins = Game1.getFarm().buildings.Where(building => building.isCabin && !IsBuildingInHiddenStack(building)).ToArray();
+            Vector2? cabinLocation = null;
+            if (nonHiddenCabins.Length != 0)
+            {
+                cabinLocation = new Vector2(nonHiddenCabins.First().tileX.Value, nonHiddenCabins.First().tileY.Value);
+            }
+
+            var stackLocation = _cabinManagerData.DefaultCabinLocation ?? cabinLocation ?? new Vector2(50, 14);
             return stackLocation;
         }
 
