@@ -28,7 +28,14 @@ namespace JunimoServer.Services.Commands
                         helper.SendPrivateMessage(msg.SourceFarmer, "Must be on Farm to move your cabin.");
                         return;
                     }
-                    
+
+                    var isOwnersCabin = ((Cabin)Game1.getFarm().buildings.First(building => building.isCabin).indoors.Value).owner.UniqueMultiplayerID == fromPlayer.UniqueMultiplayerID
+                    if (isOwnersCabin)
+                    {
+                        helper.SendPrivateMessage(msg.SourceFarmer, "Can't move cabin as primary admin. (Your cabin is the farmhouse)");
+                        return;
+                    }
+
                     var cabinBlueprint = new BluePrint("Log Cabin");
                     var cabinLocation = new Vector2(fromPlayer.getTileX() + 1, fromPlayer.getTileY());
 
