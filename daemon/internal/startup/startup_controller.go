@@ -1,8 +1,9 @@
 package startup
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 type StatusUpdate struct {
@@ -40,6 +41,7 @@ func (c *Controller) OnGetConfig(ctx *gin.Context) {
 		CatPerson:          c.startupService.config.CatPerson,
 		FarmName:           c.startupService.config.FarmName,
 		MaxPlayers:         int(c.startupService.config.MaxPlayers),
+		CabinStrategy:      int(c.startupService.config.CabinStrategy),
 	})
 }
 

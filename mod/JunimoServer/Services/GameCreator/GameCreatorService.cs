@@ -57,7 +57,8 @@ namespace JunimoServer.Services.GameCreator
 
             _options.SetPersistentOptions(new PersistentOptionsSaveData
             {
-                MaxPlayers = config.MaxPlayers
+                MaxPlayers = config.MaxPlayers,
+                CabinStrategy = (CabinStrategy)config.CabinStrategy
             });
 
 
@@ -93,11 +94,11 @@ namespace JunimoServer.Services.GameCreator
 
             _gameLoader.SetCurrentGameAsSaveToLoad(config.FarmName);
 
-            
+
 
             var initialCabin = Game1.getFarm().buildings.First(building => building.isCabin);
             var cabinLocation = new Vector2(initialCabin.tileX.Value, initialCabin.tileY.Value);
-            
+
             _cabinManagerService.SetDefaultCabinLocation(cabinLocation);
             _cabinManagerService.MoveCabinToHiddenStack(initialCabin);
 

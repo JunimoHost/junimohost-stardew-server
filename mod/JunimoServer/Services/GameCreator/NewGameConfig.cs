@@ -1,4 +1,6 @@
-﻿namespace JunimoServer.Services.GameCreator
+﻿using JunimoServer.Services.CabinManager;
+
+namespace JunimoServer.Services.GameCreator
 {
     public class NewGameConfig
     {
@@ -9,6 +11,8 @@
         public string FarmName { get; set; } = "Junimo";
 
         public int MaxPlayers { get; set; } = 4;
+
+        public int CabinStrategy { get; set; } = (int)JunimoServer.Services.CabinManager.CabinStrategy.CabinStack;
 
         public override string ToString()
         {

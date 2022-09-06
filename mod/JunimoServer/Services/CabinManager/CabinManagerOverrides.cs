@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using JunimoServer.Services.PersistentOption;
 using Microsoft.Xna.Framework;
 using Netcode;
 using StardewModdingAPI;
@@ -16,16 +17,16 @@ namespace JunimoServer.Services.CabinManager
         private static IMonitor _monitor;
         private static IModHelper _helper;
         private static CabinManagerData _cabinManagerData;
-        private static CabinStrategy _strategy;
+        private static PersistentOptions _options;
         private static Action<long> _onServerJoined;
 
         public static void Initialize(IModHelper helper, IMonitor monitor, CabinManagerData cabinManagerData,
-            CabinStrategy strategy, Action<long> onServerJoined)
+            PersistentOptions options, Action<long> onServerJoined)
         {
             _helper = helper;
             _monitor = monitor;
             _cabinManagerData = cabinManagerData;
-            _strategy = strategy;
+            _options = options;
             _onServerJoined = onServerJoined;
         }
 
@@ -110,7 +111,7 @@ namespace JunimoServer.Services.CabinManager
             var movedBuildings = new List<OriginalBuildingCoord>();
             var cabinsToMove = GetCabinsToMove(playerId);
 
-            if (_strategy == CabinStrategy.FarmhouseStack)
+            if (_options.Data.CabinStrategy == CabinStrategy.FarmhouseStack)
             {
                 foreach (var building in cabinsToMove)
                 {
@@ -192,7 +193,7 @@ namespace JunimoServer.Services.CabinManager
 
         public static void MoveCabinsHome(List<OriginalBuildingCoord> originalBuildingCoords)
         {
-            if (_strategy == CabinStrategy.CabinStack)
+            if (_options.Data.CabinStrategy == CabinStrategy.CabinStack)
             {
                 foreach (var originalBuildingCoord in originalBuildingCoords)
                 {

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using HarmonyLib;
+using JunimoServer.Services.PersistentOption;
 using Microsoft.Xna.Framework;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
@@ -34,16 +35,16 @@ namespace JunimoServer.Services.CabinManager
         public const int HiddenCabinX = -20;
         public const int HiddenCabinY = -20;
 
-        private readonly CabinStrategy _strategy;
+        private readonly PersistentOptions _options;
         private readonly HashSet<long> farmersInFarmhouse = new HashSet<long>();
 
-        public CabinManagerService(IModHelper helper, IMonitor monitor, Harmony harmony, CabinStrategy cabinStrategy,
+        public CabinManagerService(IModHelper helper, IMonitor monitor, Harmony harmony, PersistentOptions options,
             bool debug = false)
         {
             _helper = helper;
             _monitor = monitor;
-            _strategy = cabinStrategy;
-            CabinManagerOverrides.Initialize(helper, monitor, data, cabinStrategy, OnServerJoined);
+            _options = options;
+            CabinManagerOverrides.Initialize(helper, monitor, data, options, OnServerJoined);
 
             _helper.Events.GameLoop.SaveLoaded += OnSaveLoaded;
             _helper.Events.GameLoop.UpdateTicked += OnTicked;
@@ -122,7 +123,7 @@ namespace JunimoServer.Services.CabinManager
 
 
             Building farmersCabin;
-            if (_strategy == CabinStrategy.FarmhouseStack)
+            if (_options.Data.CabinStrategy == CabinStrategy.FarmhouseStack)
             {
                 farmersCabin = Game1.getFarm().buildings.First(building =>
                     building.isCabin && ((Cabin)building.indoors.Value).owner.UniqueMultiplayerID ==

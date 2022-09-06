@@ -3,14 +3,8 @@ package backup
 import (
 	"archive/zip"
 	"bytes"
-	"cloud.google.com/go/storage"
 	"context"
 	"encoding/json"
-	pbsd "github.com/junimohost/game-daemon/genproto/stardewdaemon/v1"
-	"github.com/junimohost/game-daemon/internal/util"
-	"github.com/junimohost/game-daemon/internal/zips"
-	"github.com/junimohost/game-daemon/pkg/stardewtypes"
-	"go.uber.org/zap"
 	"io"
 	"io/fs"
 	"io/ioutil"
@@ -18,6 +12,13 @@ import (
 	"path/filepath"
 	"strconv"
 	"time"
+
+	"cloud.google.com/go/storage"
+	pbsd "github.com/junimohost/game-daemon/gen/proto/go/junimohost/stardewdaemon/v1"
+	"github.com/junimohost/game-daemon/internal/util"
+	"github.com/junimohost/game-daemon/internal/zips"
+	"github.com/junimohost/game-daemon/pkg/stardewtypes"
+	"go.uber.org/zap"
 )
 
 const (

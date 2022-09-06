@@ -8,8 +8,8 @@ import (
 
 	"cloud.google.com/go/storage"
 	"github.com/gin-gonic/gin"
-	pbsm "github.com/junimohost/game-daemon/genproto/servermanager/v1"
-	pbsd "github.com/junimohost/game-daemon/genproto/stardewdaemon/v1"
+	pbsm "github.com/junimohost/game-daemon/gen/proto/go/junimohost/servermanager/v1"
+	pbsd "github.com/junimohost/game-daemon/gen/proto/go/junimohost/stardewdaemon/v1"
 	"github.com/junimohost/game-daemon/internal/backup"
 	"github.com/junimohost/game-daemon/internal/startup"
 	"github.com/junimohost/game-daemon/pkg/envutil"

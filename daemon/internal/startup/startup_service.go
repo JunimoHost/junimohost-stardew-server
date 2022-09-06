@@ -11,8 +11,8 @@ import (
 	"sync"
 
 	"cloud.google.com/go/storage"
-	pbsm "github.com/junimohost/game-daemon/genproto/servermanager/v1"
-	pbsd "github.com/junimohost/game-daemon/genproto/stardewdaemon/v1"
+	pbsm "github.com/junimohost/game-daemon/gen/proto/go/junimohost/servermanager/v1"
+	pbsd "github.com/junimohost/game-daemon/gen/proto/go/junimohost/stardewdaemon/v1"
 	"github.com/junimohost/game-daemon/internal/backup"
 	"github.com/junimohost/game-daemon/internal/util"
 	"github.com/junimohost/game-daemon/internal/zips"
@@ -33,6 +33,7 @@ type NewGameConfig struct {
 	CatPerson          bool   `json:"CatPerson"`
 	FarmName           string `json:"FarmName"`
 	MaxPlayers         int    `json:"MaxPlayers"`
+	CabinStrategy      int    `json:"CabinStrategy"`
 }
 
 type loadedModSavedPaths struct {
@@ -72,6 +73,7 @@ func NewService(
 		serverManagerClient:   serverManagerClient,
 		serverId:              serverId,
 		startupScriptFinished: false,
+		//default config for when backend is unavailable
 		config: pbsm.GameConfig{
 			WhichFarm:          0,
 			UseSeparateWallets: false,
@@ -79,7 +81,8 @@ func NewService(
 			CatPerson:          false,
 			FarmName:           "Test",
 			ModVersionIds:      nil,
-			MaxPlayers:         4,
+			MaxPlayers:         10,
+			CabinStrategy:      0,
 		},
 	}
 }
