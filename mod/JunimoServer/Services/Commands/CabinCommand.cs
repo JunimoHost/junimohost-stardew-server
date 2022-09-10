@@ -29,7 +29,7 @@ namespace JunimoServer.Services.Commands
                         return;
                     }
 
-                    var isOwnersCabin = ((Cabin)Game1.getFarm().buildings.First(building => building.isCabin).indoors.Value).owner.UniqueMultiplayerID == fromPlayer.UniqueMultiplayerID
+                    var isOwnersCabin = ((Cabin)Game1.getFarm().buildings.First(building => building.isCabin).indoors.Value).owner.UniqueMultiplayerID == fromPlayer.UniqueMultiplayerID;
                     if (isOwnersCabin)
                     {
                         helper.SendPrivateMessage(msg.SourceFarmer, "Can't move cabin as primary admin. (Your cabin is the farmhouse)");
