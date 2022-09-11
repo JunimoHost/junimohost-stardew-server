@@ -23,7 +23,7 @@ namespace JunimoServer.Services.Commands
                     var fromPlayer = Game1.getOnlineFarmers()
                         .First(farmer => farmer.UniqueMultiplayerID == msg.SourceFarmer);
 
-                    if (fromPlayer.currentLocation.Equals(Game1.getLocationFromName("Farm")))
+                    if (fromPlayer.currentLocation.Name != "Farm")
                     {
                         helper.SendPrivateMessage(msg.SourceFarmer, "Must be on Farm to move your cabin.");
                         return;
