@@ -83,16 +83,28 @@ namespace JunimoServer
             CabinCommand.Register(helper, chatCommands, options, Monitor);
 
             helper.Events.Display.RenderedActiveMenu += OnRenderedActiveMenu;
-            helper.Events.GameLoop.OneSecondUpdateTicked += OnSecond;
+            helper.Events.Specialized.UnvalidatedUpdateTicked += OnTickedUnvalidated;
         }
-        private void OnSecond(object sender, OneSecondUpdateTickedEventArgs e)
+        private void OnTickedUnvalidated(object sender, UnvalidatedUpdateTickedEventArgs e)
         {
-            if (Game1.server != null && Game1.server.getInviteCode() != null)
+            if (Game1.server != null )
             {
-                Monitor.Log(Game1.server.getInviteCode(), LogLevel.Info);
+                if (Game1.server.getInviteCode() != null)
+                {
+                    Monitor.Log(Game1.server.getInviteCode(), LogLevel.Info);
+
+                }
+                else
+                {
+                    Monitor.Log("Invite code is null", LogLevel.Info);
+
+                }
+            }
+            else
+            {
+                Monitor.Log("Waiting for server to not be null", LogLevel.Info);
             }
         }
-
 
         private void OnTitleMenuLaunched()
         {
