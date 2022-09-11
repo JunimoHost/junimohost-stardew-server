@@ -6,12 +6,13 @@
 		<TargetFramework>net5.0</TargetFramework>
 		<EnableHarmony>true</EnableHarmony>
 <!--		<GamePath>C:\GOG Games\Stardew Valley</GamePath>-->
-		<BundleExtraAssemblies>ThirdParty</BundleExtraAssemblies>
+		<BundleExtraAssemblies>All</BundleExtraAssemblies>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Google.Protobuf" Version="3.21.5" />
 		<PackageReference Include="Grpc.Net.Client" Version="2.48.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.0.3" />
 		<PackageReference Include="Pathoschild.Stardew.ModBuildConfig" Version="4.0.1" />
 	</ItemGroup>
 
