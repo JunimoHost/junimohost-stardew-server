@@ -1,4 +1,4 @@
-VERSION=v0.15.11
+VERSION=v0.15.12
 
 build: docker/game-daemon docker/mods/JunimoServer $(shell find docker -type f)
 	docker build --platform=amd64 -t gcr.io/junimo-host/stardew-base:$(VERSION) ./docker/
@@ -15,7 +15,7 @@ else
 	cd mod && dotnet build -o ./build --configuration Release "/p:EnableModZip=false;EnableModDeploy=false"
 endif
 	mkdir -p ./docker/mods/JunimoServer
-	cp ./mod/build/JunimoServer.dll ./mod/build/JunimoServer.pdb ./mod/JunimoServer/manifest.json ./docker/mods/JunimoServer
+	cp ./mod/build/JunimoServer.dll ./mod/build/JunimoServer.pdb ./mod/build/Google.Protobuf.dll ./mod/build/Grpc.Core.Api.dll ./mod/build/Grpc.Net.Client.dll ./mod/build/Grpc.Net.Common.dll ./mod/JunimoServer/manifest.json ./docker/mods/JunimoServer
 
 docker/game-daemon: $(shell find daemon -type f)
 	cd daemon && GOOS=linux GOARCH=amd64 go build -o ../docker/game-daemon ./cmd/daemon/daemon.go

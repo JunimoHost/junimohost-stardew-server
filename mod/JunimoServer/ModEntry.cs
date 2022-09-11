@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Net.Http;
+using Grpc.Net.Client;
 using HarmonyLib;
+using Junimohost.Stardewsteamauth.V1;
 using JunimoServer.Services.AlwaysOnServer;
 using JunimoServer.Services.Backup;
 using JunimoServer.Services.CabinManager;
@@ -16,7 +18,6 @@ using JunimoServer.Services.HostAutomation;
 using JunimoServer.Services.NetworkTweaks;
 using JunimoServer.Services.PersistentOption;
 using JunimoServer.Services.ServerOptim;
-using JunimoServer.Services.SteamAuth;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
@@ -26,8 +27,10 @@ namespace JunimoServer
 {
     internal class ModEntry : Mod
     {
+        private static readonly bool IsProd = Environment.GetEnvironmentVariable("ENVIRONMENT") == "PROD";
+
         private static readonly string SteamAuthServerAddress =
-            Environment.GetEnvironmentVariable("STEAM_AUTH_IP_PORT") ?? "localhost:8083";
+            Environment.GetEnvironmentVariable("STEAM_AUTH_IP_PORT") ?? "localhost:50053";
 
         private static readonly string DaemonPort = Environment.GetEnvironmentVariable("DAEMON_HTTP_PORT") ?? "8080";
 
@@ -69,15 +72,25 @@ namespace JunimoServer
             var networkTweaker = new NetworkTweaker(helper, options);
             var desyncKicker = new DesyncKicker(helper, Monitor);
 
-            // var steamAuthHttpClient = new HttpClient();
-            // steamAuthHttpClient.BaseAddress = new Uri($"http://{SteamAuthServerAddress}");
-            // var steamAuthClient = new SteamAuthClient(steamAuthHttpClient, Monitor);
-            // var galaxyAuthService = new GalaxyAuthService(Monitor, helper, harmony, steamAuthClient);
+            if (IsProd)
+            {
+                var steamTicketGenChannel = GrpcChannel.ForAddress($"http://{SteamAuthServerAddress}");
+                var steamTicketGenClient = new StardewSteamAuthService.StardewSteamAuthServiceClient(steamTicketGenChannel);
+                var galaxyAuthService = new GalaxyAuthService(Monitor, helper, harmony, steamTicketGenClient);
+            }
 
             var hostBot = new HostBot(helper, Monitor);
             CabinCommand.Register(helper, chatCommands, options, Monitor);
 
             helper.Events.Display.RenderedActiveMenu += OnRenderedActiveMenu;
+            helper.Events.GameLoop.OneSecondUpdateTicked += OnSecond;
+        }
+        private void OnSecond(object sender, OneSecondUpdateTickedEventArgs e)
+        {
+            if (Game1.server != null && Game1.server.getInviteCode() != null)
+            {
+                Monitor.Log(Game1.server.getInviteCode(), LogLevel.Info);
+            }
         }
 
 

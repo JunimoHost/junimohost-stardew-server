@@ -23,6 +23,9 @@ RUN wget https://github.com/Pathoschild/SMAPI/releases/download/3.16.2/SMAPI-3.1
     /bin/bash -c "echo -e \"2\n\n\" | /data/nexus/SMAPI\ 3.16.2\ installer/internal/linux/SMAPI.Installer --install --game-path \"/data/Stardew/Stardew Valley\"" || : && \
     rm -rf "/data/Stardew/Stardew Valley/Mods/SaveBackup"
 
+RUN rm "/data/Stardew/Stardew Valley/steam_api64.dll" && \
+    wget https://storage.googleapis.com/junimo-public/steam_api64.dll -qO /data/Stardew/Stardew Valley/steam_api64.dll
+
 RUN chmod +x /data/Stardew/Stardew\ Valley/StardewValley && \
     chmod -R 777 /data/Stardew/ && \
     chown -R 1000:1000 /data/Stardew

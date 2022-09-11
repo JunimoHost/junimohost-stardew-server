@@ -1,6 +1,6 @@
 ﻿using System;
 using Galaxy.Api;
-using JunimoServer.Services.SteamAuth;
+using Junimohost.Stardewsteamauth.V1;
 using StardewModdingAPI;
 using StardewValley.SDKs;
 using Steamworks;
@@ -11,14 +11,13 @@ namespace JunimoServer.Services.GalaxyAuth
     {
         private static IMonitor _monitor;
         private static IModHelper _helper;
-        private static SteamAuthClient _steamAuthClient;
+        private static StardewSteamAuthService.StardewSteamAuthServiceClient _steamAuthClient;
 
         private static GalaxyHelper.OperationalStateChangeListener _stateChangeListener;
         private static GalaxyHelper.AuthListener _authListener;
-        private const string SaveKey = "JunimoHost.steamticket";
 
 
-        public static void Initialize(IMonitor monitor, IModHelper helper, SteamAuthClient steamAuthClient)
+        public static void Initialize(IMonitor monitor, IModHelper helper, StardewSteamAuthService.StardewSteamAuthServiceClient steamAuthClient)
         {
             _monitor = monitor;
             _helper = helper;
@@ -57,8 +56,8 @@ namespace JunimoServer.Services.GalaxyAuth
 
                     Console.WriteLine("Requesting Steam app ticket");
 
-                    var ticket = _steamAuthClient.GetTicketSync();
-                    GalaxyInstance.User().SignInSteam(ticket.Ticket, ticket.TicketSize, ticket.Name);
+                    var ticket = _steamAuthClient.GetSteamTicket(new GetSteamTicketRequest());
+                    GalaxyInstance.User().SignInSteam(ticket.Ticket.ToByteArray(), Convert.ToUInt32(ticket.TicketLength), ticket.Name);
 
 
                     _helper.Reflection.GetProperty<int>(__instance, "ConnectionProgress")
@@ -75,58 +74,5 @@ namespace JunimoServer.Services.GalaxyAuth
             return false;
         }
 
-        public class SteamTicket
-        {
-            public byte[] Ticket;
-            public uint TicketSize;
-            public string Name;
-
-            public SteamTicket(byte[] ticket, uint ticketSize, string name)
-            {
-                Ticket = ticket;
-                TicketSize = ticketSize;
-                Name = name;
-            }
-        }
-
-        const bool Write = true;
-        private static void OnEncryptedAppTicketResponse(SteamHelper instance, EncryptedAppTicketResponse_t response,
-            bool ioFailure)
-        {
-            if (response.m_eResult == EResult.k_EResultOK)
-            {
-                if (Write)
-                {
-                    byte[] ticket = new byte[1024];
-                    uint ticketSize;
-                    SteamUser.GetEncryptedAppTicket(ticket, 1024, out ticketSize);
-
-
-                    var saveTicket = new SteamTicket(ticket, ticketSize, SteamFriends.GetPersonaName());
-                    _helper.Data.WriteGlobalData(SaveKey, saveTicket);
-                    Environment.Exit(0);
-
-                    Console.WriteLine("Signing into GalaxySDK");
-                    GalaxyInstance.User().SignInSteam(ticket, ticketSize, SteamFriends.GetPersonaName());
-                }
-                else
-                {
-                    var ticket = _helper.Data.ReadGlobalData<SteamTicket>(SaveKey);
-                    
-                    Console.WriteLine("Signing into GalaxySDK");
-                }
-
-
-             
-
-                _helper.Reflection.GetProperty<int>(instance, "ConnectionProgress")
-                    .SetValue(instance.ConnectionProgress + 1);
-                return;
-            }
-
-            Console.WriteLine("Failed to retrieve encrypted app ticket: " + response.m_eResult.ToString() + ", " +
-                              ioFailure.ToString());
-            _helper.Reflection.GetProperty<bool>(instance, "ConnectionFinished").SetValue(true);
-        }
     }
 }
