@@ -71,7 +71,7 @@ namespace JunimoServer.Services.GameCreator
 
             Game1.player.catPerson = config.CatPerson;
 
-            Game1.player.Name = "Host";
+            Game1.player.Name = "junimohost";
             Game1.player.displayName = Game1.player.Name;
             Game1.player.favoriteThing.Value = "Junimos";
             Game1.player.farmName.Value = config.FarmName;

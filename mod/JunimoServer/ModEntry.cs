@@ -83,11 +83,11 @@ namespace JunimoServer
             CabinCommand.Register(helper, chatCommands, options, Monitor);
 
             helper.Events.Display.RenderedActiveMenu += OnRenderedActiveMenu;
-            helper.Events.Specialized.UnvalidatedUpdateTicked += OnTickedUnvalidated;
+            helper.Events.GameLoop.OneSecondUpdateTicked += OnOneSecondTicked;
         }
-        private void OnTickedUnvalidated(object sender, UnvalidatedUpdateTickedEventArgs e)
+        private void OnOneSecondTicked(object sender, OneSecondUpdateTickedEventArgs e)
         {
-            if (Game1.server != null )
+            if (Game1.server != null)
             {
                 if (Game1.server.getInviteCode() != null)
                 {
