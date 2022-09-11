@@ -24,7 +24,7 @@ RUN wget https://github.com/Pathoschild/SMAPI/releases/download/3.16.2/SMAPI-3.1
     rm -rf "/data/Stardew/Stardew Valley/Mods/SaveBackup"
 
 RUN rm "/data/Stardew/Stardew Valley/steam_api64.dll" && \
-    wget https://storage.googleapis.com/junimo-public/steam_api64.dll -qO /data/Stardew/Stardew Valley/steam_api64.dll
+    wget https://storage.googleapis.com/junimo-public/steam_api64.dll -O /data/Stardew/Stardew\ Valley/steam_api64.dll
 
 RUN chmod +x /data/Stardew/Stardew\ Valley/StardewValley && \
     chmod -R 777 /data/Stardew/ && \

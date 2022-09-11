@@ -4,11 +4,11 @@ build: docker/game-daemon docker/mods/JunimoServer $(shell find docker -type f)
 	docker build --platform=amd64 -t gcr.io/junimo-host/stardew-base:$(VERSION) ./docker/
 
 clean:
-	rm -r ./docker/mods/JunimoServer
-	rm -r ./mod/build
+	rm -rf ./docker/mods/JunimoServer
+	rm -rf ./mod/build
 	rm ./docker/game-daemon
 
-docker/mods/JunimoServer: $(shell find mod -type f)
+docker/mods/JunimoServer: $(shell find mod/JunimoServer/**/*.cs -type f)
 ifeq ($(CI), true)
 	cd mod && dotnet build -o ./build --configuration Release "/p:EnableModZip=false;EnableModDeploy=false;GamePath=/home/runner/actions-runner/_work/junimohost-stardew-server/junimohost-stardew-server/Stardew Valley"
 else
