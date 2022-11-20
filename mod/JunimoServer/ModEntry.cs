@@ -2,6 +2,7 @@
 using System.Net.Http;
 using Grpc.Net.Client;
 using HarmonyLib;
+using Junimohost.Stardewgame.V1;
 using Junimohost.Stardewsteamauth.V1;
 using JunimoServer.Services.AlwaysOnServer;
 using JunimoServer.Services.Backup;
@@ -27,11 +28,20 @@ namespace JunimoServer
 {
     internal class ModEntry : Mod
     {
-        private static readonly bool IsProd = Environment.GetEnvironmentVariable("ENVIRONMENT") == "PROD";
 
+        private static readonly bool SteamAuthEnabled =
+            bool.Parse(Environment.GetEnvironmentVariable("STEAM_AUTH_ENABLED") ?? "false");
+        
         private static readonly string SteamAuthServerAddress =
             Environment.GetEnvironmentVariable("STEAM_AUTH_IP_PORT") ?? "localhost:50053";
+        private static readonly string JunimoBootServerAddress =
+            Environment.GetEnvironmentVariable("JUNIMO_BOOT_IP_PORT") ?? "";
 
+        private static readonly int HealthCheckSeconds =
+            Int32.Parse(Environment.GetEnvironmentVariable("HEALTH_CHECK_SECONDS") ?? "10");
+        private static readonly string ServerId =
+            Environment.GetEnvironmentVariable("SERVER_ID") ?? "test";
+        
         private static readonly string DaemonPort = Environment.GetEnvironmentVariable("DAEMON_HTTP_PORT") ?? "8080";
 
         private static readonly bool DisableRendering =
@@ -44,6 +54,7 @@ namespace JunimoServer
         private GameLoaderService _gameLoaderService;
         private ServerOptimizer _serverOptimizer;
         private DaemonService _daemonService;
+        private StardewGameService.StardewGameServiceClient _stardewGameServiceClient;
         private bool _titleLaunched = false;
 
 
@@ -72,11 +83,14 @@ namespace JunimoServer
             var networkTweaker = new NetworkTweaker(helper, options);
             var desyncKicker = new DesyncKicker(helper, Monitor);
 
-            if (IsProd)
+            if (SteamAuthEnabled)
             {
                 var steamTicketGenChannel = GrpcChannel.ForAddress($"http://{SteamAuthServerAddress}");
                 var steamTicketGenClient = new StardewSteamAuthService.StardewSteamAuthServiceClient(steamTicketGenChannel);
                 var galaxyAuthService = new GalaxyAuthService(Monitor, helper, harmony, steamTicketGenClient);
+                
+                var junimoBootGenChannel = GrpcChannel.ForAddress($"http://{JunimoBootServerAddress}");
+                _stardewGameServiceClient = new StardewGameService.StardewGameServiceClient(junimoBootGenChannel);
             }
 
             var hostBot = new HostBot(helper, Monitor);
@@ -85,13 +99,23 @@ namespace JunimoServer
             helper.Events.Display.RenderedActiveMenu += OnRenderedActiveMenu;
             helper.Events.GameLoop.OneSecondUpdateTicked += OnOneSecondTicked;
         }
+
+        private int _healthCheckTimer = 0;
         private void OnOneSecondTicked(object sender, OneSecondUpdateTickedEventArgs e)
         {
+            _healthCheckTimer--;
             if (Game1.server != null)
             {
-                if (Game1.server.getInviteCode() != null)
+                if (Game1.server.getInviteCode() != null && _healthCheckTimer == 0)
                 {
                     Monitor.Log(Game1.server.getInviteCode(), LogLevel.Info);
+                    _stardewGameServiceClient.GameHealthCheckAsync(new GameHealthCheckRequest
+                    {
+                        InviteCode = Game1.server.getInviteCode(),
+                        IsConnectable = true,
+                        ServerId = ServerId,
+                    });
+                    _healthCheckTimer = HealthCheckSeconds;
 
                 }
                 else
