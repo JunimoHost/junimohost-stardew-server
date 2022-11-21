@@ -151,43 +151,43 @@ namespace JunimoServer
                 _gameCreatorService.CreateNewGame(config);
                 return;
             }
-
-            var isNetworkingReady = Helper.IsNetworkingReady();
-            Monitor.Log("networking status (ready=true): " +  isNetworkingReady);
-            while (!isNetworkingReady)
-            {
-                Thread.Sleep(1000);
-                isNetworkingReady = Helper.IsNetworkingReady();
-                Monitor.Log("networking status (ready=true): " +  isNetworkingReady);
-            }
-
-            var successfullyStarted = true;
-            if (_gameLoaderService.HasLoadableSave())
-            {
-                successfullyStarted = _gameLoaderService.LoadSave();
-            }
-            else
-            {
-                successfullyStarted = _gameCreatorService.CreateNewGameFromDaemonConfig();
-            }
-
-            try
-            {
-                if (successfullyStarted)
-                {
-                    var updateTask = _daemonService.UpdateConnectableStatus();
-                    updateTask.Wait();
-                }
-                else
-                {
-                    var updateTask = _daemonService.UpdateNotConnectableStatus();
-                    updateTask.Wait();
-                }
-            }
-            catch (Exception e)
-            {
-                Monitor.Log(e.ToString(), LogLevel.Error);
-            }
+            //
+            // var isNetworkingReady = Helper.IsNetworkingReady();
+            // Monitor.Log("networking status (ready=true): " +  isNetworkingReady);
+            // while (!isNetworkingReady)
+            // {
+            //     Thread.Sleep(1000);
+            //     isNetworkingReady = Helper.IsNetworkingReady();
+            //     Monitor.Log("networking status (ready=true): " +  isNetworkingReady);
+            // }
+            //
+            // var successfullyStarted = true;
+            // if (_gameLoaderService.HasLoadableSave())
+            // {
+            //     successfullyStarted = _gameLoaderService.LoadSave();
+            // }
+            // else
+            // {
+            //     successfullyStarted = _gameCreatorService.CreateNewGameFromDaemonConfig();
+            // }
+            //
+            // try
+            // {
+            //     if (successfullyStarted)
+            //     {
+            //         var updateTask = _daemonService.UpdateConnectableStatus();
+            //         updateTask.Wait();
+            //     }
+            //     else
+            //     {
+            //         var updateTask = _daemonService.UpdateNotConnectableStatus();
+            //         updateTask.Wait();
+            //     }
+            // }
+            // catch (Exception e)
+            // {
+            //     Monitor.Log(e.ToString(), LogLevel.Error);
+            // }
         }
 
         private void OnRenderedActiveMenu(object sender, RenderedActiveMenuEventArgs e)
