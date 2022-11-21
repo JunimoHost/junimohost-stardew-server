@@ -35,7 +35,7 @@ namespace JunimoServer
             Environment.GetEnvironmentVariable("STEAM_AUTH_IP_PORT") ?? "localhost:50053";
 
         private static readonly string JunimoBootServerAddress =
-            Environment.GetEnvironmentVariable("JUNIMO_BOOT_IP_PORT") ?? "";
+            Environment.GetEnvironmentVariable("BACKEND_HOSTPORT") ?? "";
 
         private static readonly int HealthCheckSeconds =
             Int32.Parse(Environment.GetEnvironmentVariable("HEALTH_CHECK_SECONDS") ?? "10");
