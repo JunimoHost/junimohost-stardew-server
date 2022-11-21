@@ -34,7 +34,7 @@ namespace JunimoServer.Util
         
         public static bool IsNetworkingReady(this IModHelper helper)
         {
-            var sdk = helper.Reflection.GetField<SDKHelper>(typeof(Program), "sdk").GetValue();
+            var sdk = helper.Reflection.GetField<SDKHelper>(typeof(Program), "_sdk").GetValue();
             return sdk != null && sdk.Networking != null;
         }
     }
