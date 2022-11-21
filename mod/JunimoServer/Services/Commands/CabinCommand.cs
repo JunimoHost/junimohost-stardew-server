@@ -19,7 +19,7 @@ namespace JunimoServer.Services.Commands
                 "!cabin moves your cabin to the right of your location.\nThis will clear basic debris to make space.",
                 (args, msg) =>
                 {
-
+                    //TODO: disable with farmhouse mode
                     var fromPlayer = Game1.getOnlineFarmers()
                         .First(farmer => farmer.UniqueMultiplayerID == msg.SourceFarmer);
 
