@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Net.Http;
-using System.Threading;
+using System.Threading.Tasks;
 using Grpc.Net.Client;
 using HarmonyLib;
 using Junimohost.Stardewgame.V1;
@@ -58,7 +58,10 @@ namespace JunimoServer
         private ServerOptimizer _serverOptimizer;
         private DaemonService _daemonService;
         private StardewGameService.StardewGameServiceClient _stardewGameServiceClient;
+
         private bool _titleLaunched = false;
+        private bool _gameStarted = false;
+        private int _healthCheckTimer = 0;
 
 
         public override void Entry(IModHelper helper)
@@ -104,16 +107,81 @@ namespace JunimoServer
             helper.Events.GameLoop.OneSecondUpdateTicked += OnOneSecondTicked;
         }
 
-        private int _healthCheckTimer = 0;
 
         private void OnOneSecondTicked(object sender, OneSecondUpdateTickedEventArgs e)
+        {
+            RunHealthCheck();
+            ConditionallyStartGame();
+        }
+
+        private void OnRenderedActiveMenu(object sender, RenderedActiveMenuEventArgs e)
+        {
+            if (Game1.activeClickableMenu is TitleMenu && !_titleLaunched)
+            {
+                _titleLaunched = true;
+            }
+        }
+
+        private void ConditionallyStartGame()
+
+        {
+            if (_gameStarted) return;
+
+            var isNetworkingReady = Helper.IsNetworkingReady();
+            var networkingIsNeededButNotReady = SteamAuthEnabled && !isNetworkingReady;
+            if (!_titleLaunched || networkingIsNeededButNotReady) return;
+            _gameStarted = true;
+            
+            if (ForceNewDebugGame)
+            {
+                var config = new NewGameConfig
+                {
+                    WhichFarm = 0,
+                    MaxPlayers = 4,
+                };
+                _gameCreatorService.CreateNewGame(config);
+                return;
+            }
+
+
+            var successfullyStarted = true;
+            if (_gameLoaderService.HasLoadableSave())
+            {
+                successfullyStarted = _gameLoaderService.LoadSave();
+            }
+            else
+            {
+                successfullyStarted = _gameCreatorService.CreateNewGameFromDaemonConfig();
+            }
+
+            try
+            {
+                if (successfullyStarted)
+                {
+                    var updateTask = _daemonService.UpdateConnectableStatus();
+                    updateTask.Wait();
+                }
+                else
+                {
+                    var updateTask = _daemonService.UpdateNotConnectableStatus();
+                    updateTask.Wait();
+                }
+            }
+            catch (Exception e)
+            {
+                Monitor.Log(e.ToString(), LogLevel.Error);
+            }
+        }
+
+
+        private void RunHealthCheck()
         {
             if (_healthCheckTimer > 0)
             {
                 _healthCheckTimer--;
                 return;
             }
-            
+
             _healthCheckTimer = HealthCheckSeconds;
 
             if (Game1.server != null)
@@ -121,12 +189,7 @@ namespace JunimoServer
                 if (Game1.server.getInviteCode() != null)
                 {
                     Monitor.Log(Game1.server.getInviteCode(), LogLevel.Info);
-                    _stardewGameServiceClient.GameHealthCheckAsync(new GameHealthCheckRequest
-                    {
-                        InviteCode = Game1.server.getInviteCode(),
-                        IsConnectable = true,
-                        ServerId = ServerId,
-                    });
+                    Task.Run(() => { SendHealthCheck(Game1.server.getInviteCode()); });
                 }
                 else
                 {
@@ -139,63 +202,24 @@ namespace JunimoServer
             }
         }
 
-        private void OnTitleMenuLaunched()
+        private async void SendHealthCheck(string inviteCode)
         {
-            if (ForceNewDebugGame)
+            try
             {
-                var config = new NewGameConfig
+                await _stardewGameServiceClient.GameHealthCheckAsync(new GameHealthCheckRequest
                 {
-                    WhichFarm = 0,
-                    MaxPlayers = 4,
-                };
-                _gameCreatorService.CreateNewGame(config);
-                return;
+                    InviteCode = inviteCode,
+                    IsConnectable = true,
+                    ServerId = ServerId,
+                });
             }
-            //
-            // var isNetworkingReady = Helper.IsNetworkingReady();
-            // Monitor.Log("networking status (ready=true): " +  isNetworkingReady);
-            // while (!isNetworkingReady)
-            // {
-            //     Thread.Sleep(1000);
-            //     isNetworkingReady = Helper.IsNetworkingReady();
-            //     Monitor.Log("networking status (ready=true): " +  isNetworkingReady);
-            // }
-            //
-            // var successfullyStarted = true;
-            // if (_gameLoaderService.HasLoadableSave())
-            // {
-            //     successfullyStarted = _gameLoaderService.LoadSave();
-            // }
-            // else
-            // {
-            //     successfullyStarted = _gameCreatorService.CreateNewGameFromDaemonConfig();
-            // }
-            //
-            // try
-            // {
-            //     if (successfullyStarted)
-            //     {
-            //         var updateTask = _daemonService.UpdateConnectableStatus();
-            //         updateTask.Wait();
-            //     }
-            //     else
-            //     {
-            //         var updateTask = _daemonService.UpdateNotConnectableStatus();
-            //         updateTask.Wait();
-            //     }
-            // }
-            // catch (Exception e)
-            // {
-            //     Monitor.Log(e.ToString(), LogLevel.Error);
-            // }
-        }
-
-        private void OnRenderedActiveMenu(object sender, RenderedActiveMenuEventArgs e)
-        {
-            if (Game1.activeClickableMenu is TitleMenu && !_titleLaunched)
+            catch (Exception e)
             {
-                OnTitleMenuLaunched();
-                _titleLaunched = true;
+                Monitor.Log("Failed to send health check: " + e.Message, LogLevel.Error);
+
+                // manually retry connection
+                var junimoBootGenChannel = GrpcChannel.ForAddress($"http://{JunimoBootServerAddress}");
+                _stardewGameServiceClient = new StardewGameService.StardewGameServiceClient(junimoBootGenChannel);
             }
         }
     }
