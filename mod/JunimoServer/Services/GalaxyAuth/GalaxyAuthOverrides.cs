@@ -23,8 +23,7 @@ namespace JunimoServer.Services.GalaxyAuth
             _helper = helper;
             _steamAuthClient = steamAuthClient;
         }
-
-
+        
 
         public static bool SteamHelperInitialize_Prefix(SteamHelper __instance)
         {

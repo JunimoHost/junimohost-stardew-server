@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net.Http;
+using System.Threading;
 using Grpc.Net.Client;
 using HarmonyLib;
 using Junimohost.Stardewgame.V1;
@@ -19,6 +20,7 @@ using JunimoServer.Services.HostAutomation;
 using JunimoServer.Services.NetworkTweaks;
 using JunimoServer.Services.PersistentOption;
 using JunimoServer.Services.ServerOptim;
+using JunimoServer.Util;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
@@ -150,6 +152,14 @@ namespace JunimoServer
                 return;
             }
 
+            var isNetworkingReady = Helper.IsNetworkingReady();
+            Monitor.Log("networking status (ready=true): " +  isNetworkingReady);
+            while (!isNetworkingReady)
+            {
+                Thread.Sleep(1000);
+                isNetworkingReady = Helper.IsNetworkingReady();
+                Monitor.Log("networking status (ready=true): " +  isNetworkingReady);
+            }
 
             var successfullyStarted = true;
             if (_gameLoaderService.HasLoadableSave())

@@ -3,6 +3,7 @@ using System.Linq;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Locations;
+using StardewValley.SDKs;
 
 namespace JunimoServer.Util
 {
@@ -29,6 +30,12 @@ namespace JunimoServer.Util
         {
             return helper.Reflection.GetMethod(Game1.server, "cabins")
                 .Invoke<IEnumerable<Cabin>>().ToList().Count;
+        }
+        
+        public static bool IsNetworkingReady(this IModHelper helper)
+        {
+            var sdk = helper.Reflection.GetField<SDKHelper>(typeof(Program), "sdk").GetValue();
+            return sdk != null && sdk.Networking != null;
         }
     }
 }
