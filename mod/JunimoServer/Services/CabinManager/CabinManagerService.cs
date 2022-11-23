@@ -29,7 +29,7 @@ namespace JunimoServer.Services.CabinManager
     {
         private readonly IModHelper _helper;
         private readonly IMonitor _monitor;
-        private CabinManagerData data = new CabinManagerData();
+        private CabinManagerData _data = new CabinManagerData();
         private const string cabinManagerDataKey = "JunimoHost.CabinManager.data";
         private const int minEmptyCabins = 4;
         public const int HiddenCabinX = -20;
@@ -44,7 +44,7 @@ namespace JunimoServer.Services.CabinManager
             _helper = helper;
             _monitor = monitor;
             _options = options;
-            CabinManagerOverrides.Initialize(helper, monitor, data, options, OnServerJoined);
+            CabinManagerOverrides.Initialize(helper, monitor, _data, options, OnServerJoined);
 
             _helper.Events.GameLoop.SaveLoaded += OnSaveLoaded;
             _helper.Events.GameLoop.UpdateTicked += OnTicked;
@@ -84,8 +84,8 @@ namespace JunimoServer.Services.CabinManager
         }
         private void OnServerJoined(long peerId)
         {
-            data.AllPlayerIdsEverJoined.Add(peerId);
-            _helper.Data.WriteSaveData(cabinManagerDataKey, data);
+            _data.AllPlayerIdsEverJoined.Add(peerId);
+            _helper.Data.WriteSaveData(cabinManagerDataKey, _data);
             EnsureAtLeastXCabins();
         }
 
@@ -149,13 +149,13 @@ namespace JunimoServer.Services.CabinManager
 
         private void OnSaveLoaded(object sender, SaveLoadedEventArgs e)
         {
-            data = _helper.Data.ReadSaveData<CabinManagerData>(cabinManagerDataKey) ?? new CabinManagerData();
+            _data = _helper.Data.ReadSaveData<CabinManagerData>(cabinManagerDataKey) ?? new CabinManagerData();
         }
 
         public void SetDefaultCabinLocation(Vector2 location)
         {
-            data.DefaultCabinLocation = location;
-            _helper.Data.WriteSaveData(cabinManagerDataKey, data);
+            _data.DefaultCabinLocation = location;
+            _helper.Data.WriteSaveData(cabinManagerDataKey, _data);
         }
 
         public void MoveCabinToHiddenStack(Building cabin)
@@ -172,7 +172,7 @@ namespace JunimoServer.Services.CabinManager
 
             var numEmptyCabins = Game1.getFarm().buildings.Where(building => building.isCabin)
                 .Count(cabin =>
-                    !data.AllPlayerIdsEverJoined.Contains(
+                    !_data.AllPlayerIdsEverJoined.Contains(
                         ((Cabin)cabin.indoors.Value).farmhand.Value.UniqueMultiplayerID)
                 );
 

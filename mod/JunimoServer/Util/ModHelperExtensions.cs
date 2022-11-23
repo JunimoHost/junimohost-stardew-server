@@ -37,5 +37,10 @@ namespace JunimoServer.Util
             var sdk = helper.Reflection.GetField<SDKHelper>(typeof(Program), "_sdk").GetValue();
             return sdk != null && sdk.Networking != null;
         }
+
+        public static long GetOwnerPlayerId(this IModHelper helper)
+        {
+           return ((Cabin)Game1.getFarm().buildings.First(building => building.isCabin).indoors.Value).owner.UniqueMultiplayerID;
+        }
     }
 }

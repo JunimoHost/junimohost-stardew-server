@@ -19,6 +19,7 @@ using JunimoServer.Services.GameTweaks;
 using JunimoServer.Services.HostAutomation;
 using JunimoServer.Services.NetworkTweaks;
 using JunimoServer.Services.PersistentOption;
+using JunimoServer.Services.Roles;
 using JunimoServer.Services.ServerOptim;
 using JunimoServer.Util;
 using StardewModdingAPI;
@@ -95,13 +96,18 @@ namespace JunimoServer
                 var steamTicketGenClient =
                     new StardewSteamAuthService.StardewSteamAuthServiceClient(steamTicketGenChannel);
                 var galaxyAuthService = new GalaxyAuthService(Monitor, helper, harmony, steamTicketGenClient);
+            }
 
+            if (JunimoBootServerAddress != "")
+            {
                 var junimoBootGenChannel = GrpcChannel.ForAddress($"http://{JunimoBootServerAddress}");
                 _stardewGameServiceClient = new StardewGameService.StardewGameServiceClient(junimoBootGenChannel);
             }
-
             var hostBot = new HostBot(helper, Monitor);
             CabinCommand.Register(helper, chatCommands, options, Monitor);
+
+            var roleService = new RoleService(helper);
+            RoleCommands.Register(helper, chatCommands, roleService);
 
             helper.Events.Display.RenderedActiveMenu += OnRenderedActiveMenu;
             helper.Events.GameLoop.OneSecondUpdateTicked += OnOneSecondTicked;
@@ -204,6 +210,8 @@ namespace JunimoServer
 
         private async void SendHealthCheck(string inviteCode)
         {
+            if(JunimoBootServerAddress == "") return;
+            
             try
             {
                 await _stardewGameServiceClient.GameHealthCheckAsync(new GameHealthCheckRequest

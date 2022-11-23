@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using JunimoServer.Services.CabinManager;
 using JunimoServer.Services.ChatCommands;
 using JunimoServer.Services.PersistentOption;
 using JunimoServer.Util;
@@ -16,10 +17,14 @@ namespace JunimoServer.Services.Commands
             PersistentOptions options, IMonitor monitor)
         {
             chatCommandApi.RegisterCommand("cabin",
-                "!cabin moves your cabin to the right of your location.\nThis will clear basic debris to make space.",
+                "Moves your cabin to the right of your player.\nThis will clear basic debris to make space.",
                 (args, msg) =>
                 {
-                    //TODO: disable with farmhouse mode
+                    if (options.Data.CabinStrategy == CabinStrategy.FarmhouseStack)
+                    {
+                        helper.SendPrivateMessage(msg.SourceFarmer, "Can't move cabin. The host has chosen to keep all cabins in the farmhouse.");
+                        return;
+                    }
                     var fromPlayer = Game1.getOnlineFarmers()
                         .First(farmer => farmer.UniqueMultiplayerID == msg.SourceFarmer);
 
@@ -29,7 +34,7 @@ namespace JunimoServer.Services.Commands
                         return;
                     }
 
-                    var isOwnersCabin = ((Cabin)Game1.getFarm().buildings.First(building => building.isCabin).indoors.Value).owner.UniqueMultiplayerID == fromPlayer.UniqueMultiplayerID;
+                    var isOwnersCabin = helper.GetOwnerPlayerId() == fromPlayer.UniqueMultiplayerID;
                     if (isOwnersCabin)
                     {
                         helper.SendPrivateMessage(msg.SourceFarmer, "Can't move cabin as primary admin. (Your cabin is the farmhouse)");

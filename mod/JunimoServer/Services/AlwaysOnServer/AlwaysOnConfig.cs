@@ -20,16 +20,16 @@ namespace JunimoServer.Services.AlwaysOnServer
         public int GrangeDisplayCountDownConfig { get; set; } = 300;
         public int IceFishingCountDownConfig { get; set; } = 300;
 
-        public int EndOfDayTimeOut { get; set; } = 120;
-        public int FairTimeOut { get; set; } = 1200;
-        public int SpiritsEveTimeOut { get; set; } = 900;
-        public int WinterStarTimeOut { get; set; } = 900;
+        public int EndOfDayTimeOut { get; set; } = 120000;
+        public int FairTimeOut { get; set; } = 120000;
+        public int SpiritsEveTimeOut { get; set; } = 120000;
+        public int WinterStarTimeOut { get; set; } = 120000;
 
-        public int EggFestivalTimeOut { get; set; } = 120;
-        public int FlowerDanceTimeOut { get; set; } = 120;
-        public int LuauTimeOut { get; set; } = 120;
-        public int DanceOfJelliesTimeOut { get; set; } = 120;
-        public int FestivalOfIceTimeOut { get; set; } = 120;
+        public int EggFestivalTimeOut { get; set; } = 120000;
+        public int FlowerDanceTimeOut { get; set; } = 120000;
+        public int LuauTimeOut { get; set; } = 120000;
+        public int DanceOfJelliesTimeOut { get; set; } = 120000;
+        public int FestivalOfIceTimeOut { get; set; } = 120000;
 
     }
 }
