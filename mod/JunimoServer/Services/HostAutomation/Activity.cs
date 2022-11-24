@@ -2,7 +2,7 @@ namespace JunimoServer.Services.HostAutomation
 {
     public abstract class Activity
     {
-        private bool _enabled = true;
+        private bool _enabled = false;
         private readonly int _everyXTicks;
         private int _tickNum = 0;
         private int _ticksToWaitRemaining = 0;
