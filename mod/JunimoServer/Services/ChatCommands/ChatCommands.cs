@@ -33,15 +33,12 @@ namespace JunimoServer.Services.ChatCommands
 
         private void HelpCommand(string[] args, ReceivedMessage msg)
         {
-            var commandList = new StringBuilder();
-            commandList.Append("Commands:\n");
 
             foreach (var command in _registeredCommands)
             {
-                commandList.Append($"!{command.Name}: {command.Description}\n");
+                _helper.SendPrivateMessage(msg.SourceFarmer,  $"!{command.Name}: {command.Description}");
             }
 
-            _helper.SendPrivateMessage(msg.SourceFarmer, commandList.ToString());
         }
 
 

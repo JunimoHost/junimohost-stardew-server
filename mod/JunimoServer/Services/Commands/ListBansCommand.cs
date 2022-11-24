@@ -19,6 +19,12 @@ namespace JunimoServer.Services.Commands
                     return;
                 }
 
+                if (Game1.bannedUsers.Count == 0)
+                {
+                    helper.SendPrivateMessage(msg.SourceFarmer, "There are 0 banned users.");
+                    return;
+                }
+                
                 helper.SendPrivateMessage(msg.SourceFarmer, "Banned users:");
 
                 foreach (var (k, v) in Game1.bannedUsers)

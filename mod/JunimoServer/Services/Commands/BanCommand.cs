@@ -32,6 +32,12 @@ namespace JunimoServer.Services.Commands
                     helper.SendPrivateMessage(msg.SourceFarmer, "Player not found: " + nameFromCommand);
                     return;
                 }
+                
+                if (targetFarmer.UniqueMultiplayerID == helper.GetOwnerPlayerId())
+                {
+                    helper.SendPrivateMessage(msg.SourceFarmer, "You can't ban the owner of the server.");
+                    return;
+                }
 
                 Game1.server.ban(targetFarmer.UniqueMultiplayerID);
                 helper.SendPrivateMessage(msg.SourceFarmer, "Banned: " + targetFarmer.Name);

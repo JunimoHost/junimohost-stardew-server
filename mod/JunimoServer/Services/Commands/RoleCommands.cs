@@ -36,7 +36,7 @@ namespace JunimoServer.Services.Commands
                 roleService.AssignAdmin(farmerToAdmin.UniqueMultiplayerID);
                 helper.SendPrivateMessage(msg.SourceFarmer, "Assigned Admin to: " + farmerToAdmin.Name);
             });
-            chatCommandApi.RegisterCommand("unadmin", "\"farmerName|playerName\" to take away admin status from the player.", (args, msg) =>
+            chatCommandApi.RegisterCommand("unadmin", "\"farmerName|userName\" to take away admin status from the player.", (args, msg) =>
             {
                 if (!roleService.IsPlayerAdmin(msg.SourceFarmer))
                 {
