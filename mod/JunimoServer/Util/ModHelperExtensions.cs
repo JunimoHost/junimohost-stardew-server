@@ -14,6 +14,28 @@ namespace JunimoServer.Util
             return helper.Reflection.GetField<Multiplayer>(typeof(Game1), "multiplayer").GetValue();
         }
 
+        public static Farmer FindPlayerIdByFarmerNameOrUserName(this IModHelper helper, string name)
+        {
+            return Game1
+                .getAllFarmers()
+                .FirstOrDefault(farmer => farmer.Name == name
+                                          || helper.GetFarmerUserNameById(farmer.UniqueMultiplayerID) == name);
+
+
+        }
+
+        public static string GetFarmerUserNameById(this IModHelper helper, long id)
+        {
+            return helper.GetMultiplayer().getUserName(id);
+        }
+
+        public static string GetFarmerNameById(this IModHelper helper, long id)
+        {
+            return Game1
+                .getAllFarmers()
+                .FirstOrDefault(farmer => farmer.UniqueMultiplayerID == id)?.Name;
+        }
+
         public static void SendPublicMessage(this IModHelper helper, string msg)
         {
             helper.GetMultiplayer()
@@ -31,7 +53,7 @@ namespace JunimoServer.Util
             return helper.Reflection.GetMethod(Game1.server, "cabins")
                 .Invoke<IEnumerable<Cabin>>().ToList().Count;
         }
-        
+
         public static bool IsNetworkingReady(this IModHelper helper)
         {
             var sdk = helper.Reflection.GetField<SDKHelper>(typeof(Program), "_sdk").GetValue();
@@ -40,7 +62,7 @@ namespace JunimoServer.Util
 
         public static long GetOwnerPlayerId(this IModHelper helper)
         {
-           return ((Cabin)Game1.getFarm().buildings.First(building => building.isCabin).indoors.Value).owner.UniqueMultiplayerID;
+            return ((Cabin)Game1.getFarm().buildings.First(building => building.isCabin).indoors.Value).owner.UniqueMultiplayerID;
         }
     }
 }

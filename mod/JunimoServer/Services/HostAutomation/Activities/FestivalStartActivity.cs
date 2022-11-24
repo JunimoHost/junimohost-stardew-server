@@ -1,7 +1,4 @@
-using System.Collections.Generic;
-using StardewValley;
-
-namespace JunimoServer.Services.HostAutomation
+namespace JunimoServer.Services.HostAutomation.Activities
 {
     public class FestivalStartActivity: Activity
     {

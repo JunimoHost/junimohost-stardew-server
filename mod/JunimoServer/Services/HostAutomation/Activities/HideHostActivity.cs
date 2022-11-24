@@ -1,6 +1,6 @@
 using StardewValley;
 
-namespace JunimoServer.Services.HostAutomation
+namespace JunimoServer.Services.HostAutomation.Activities
 {
     public class HideHostActivity : Activity
     {

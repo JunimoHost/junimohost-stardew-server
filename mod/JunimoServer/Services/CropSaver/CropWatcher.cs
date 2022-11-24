@@ -14,6 +14,8 @@ namespace JunimoServer.Services.CropSaver
 
         private readonly Action<TerrainFeature> _onCropAdded;
         private readonly Action<TerrainFeature> _onCropRemoved;
+        
+        private const int UpdateEveryTicks = 5;
 
         public CropWatcher(IModHelper helper, Action<TerrainFeature> onCropAdded, Action<TerrainFeature> onCropRemoved)
         {
@@ -22,8 +24,16 @@ namespace JunimoServer.Services.CropSaver
             _onCropRemoved = onCropRemoved;
         }
 
+        private int _timer = 0;
         private void GameLoopOnUpdateTicked(object sender, UpdateTickedEventArgs e)
         {
+            if (_timer > 1)
+            {
+                _timer--;
+                return;
+            }
+            
+            _timer = UpdateEveryTicks;
             var farmLocation = Game1.getLocationFromName("Farm");
             if (farmLocation == null) return;
 

@@ -100,9 +100,12 @@ namespace JunimoServer.Services.CabinManager
         {
             if (!Game1.hasLoadedGame) return;
 
-            var idsInFarmHouse = Game1.getLocationFromName("Farmhouse").farmers
-                .Select(farmer => farmer.UniqueMultiplayerID)
-                .ToHashSet();
+            var idsInFarmHouse = new HashSet<long>();
+
+            foreach (var farmer in Game1.getLocationFromName("Farmhouse").farmers)
+            {
+                idsInFarmHouse.Add(farmer.UniqueMultiplayerID);
+            }
 
             foreach (var farmer in Game1.getLocationFromName("Farmhouse").farmers)
             {

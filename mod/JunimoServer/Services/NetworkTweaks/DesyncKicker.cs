@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using HarmonyLib;
 using JunimoServer.Util;
@@ -17,8 +19,9 @@ namespace JunimoServer.Services.NetworkTweaks
 
         private readonly IModHelper _helper;
         private readonly IMonitor _monitor;
-        private bool _inNewDayBarrier = false;
-        private bool _isSaving = false;
+
+        private CancellationTokenSource _currentEndOfDayCancelToken;
+        private CancellationTokenSource _currentNewDayBarrierCancelToken;
 
         public DesyncKicker(IModHelper helper, IMonitor monitor)
         {
@@ -33,25 +36,30 @@ namespace JunimoServer.Services.NetworkTweaks
         private void OnSaved(object sender, SavedEventArgs e)
         {
 
-            _isSaving = false;
+            _currentEndOfDayCancelToken.Cancel();
         }
 
         private void OnSaving(object sender, SavingEventArgs e)
         {
-            _inNewDayBarrier = false;
+            _currentNewDayBarrierCancelToken.Cancel();
             _monitor.Log("Saving");
-            _isSaving = true;
+
+            _currentEndOfDayCancelToken = new CancellationTokenSource();
+            var token = _currentEndOfDayCancelToken.Token;
 
             Task.Run(async () =>
             {
                 _monitor.Log($"waiting {endOfDayDesyncMaxTime} sec to kick non-ready players");
 
                 await Task.Delay(endOfDayDesyncMaxTime * 1000);
-                _monitor.Log($"waited {endOfDayDesyncMaxTime} sec to kick non-ready players");
-                if (_isSaving)
+                if (token.IsCancellationRequested)
                 {
-                    KickDesyncedPlayers();
+                    _monitor.Log($"waited {endOfDayDesyncMaxTime} sec to kick non-ready players. Was Canceled.");
+                    return;
                 }
+
+                _monitor.Log($"waited {endOfDayDesyncMaxTime} sec to kick non-ready players");
+                KickDesyncedPlayers();
             });
         }
 
@@ -61,8 +69,7 @@ namespace JunimoServer.Services.NetworkTweaks
 
             var checks = new string[]
             {
-                "ready_for_save",
-                "wakeup"
+                "ready_for_save", "wakeup"
             };
 
             foreach (var farmer in Game1.getOnlineFarmers())
@@ -84,29 +91,35 @@ namespace JunimoServer.Services.NetworkTweaks
             if (SDate.Now().IsDayZero()) return;
             _monitor.Log("DayEnding");
 
-            _inNewDayBarrier = true;
+            _currentNewDayBarrierCancelToken = new CancellationTokenSource();
+            var token = _currentNewDayBarrierCancelToken.Token;
+
             Task.Run(async () =>
             {
                 _monitor.Log($"waiting {barrierDesyncMaxTime} sec to kick barrier");
 
                 await Task.Delay(barrierDesyncMaxTime * 1000);
+                if (token.IsCancellationRequested)
+                {
+                    _monitor.Log($"waited {barrierDesyncMaxTime} sec to kick barrier. Was Canceled");
+                    return;
+                }
                 _monitor.Log($"waited {barrierDesyncMaxTime} sec to kick barrier");
 
-                if (_inNewDayBarrier)
-                {
-                    _monitor.Log("still stuck in barrier, going to try kicking");
 
-                    var readyPlayers = _helper.Reflection.GetMethod(Game1.newDaySync, "barrierPlayers")
-                        .Invoke<HashSet<long>>("sleep");
-                    foreach (var key in (IEnumerable<long>)Game1.otherFarmers.Keys)
+                _monitor.Log("still stuck in barrier, going to try kicking");
+
+                var readyPlayers = _helper.Reflection.GetMethod(Game1.newDaySync, "barrierPlayers")
+                    .Invoke<HashSet<long>>("sleep");
+                foreach (var key in (IEnumerable<long>)Game1.otherFarmers.Keys)
+                {
+                    if (!readyPlayers.Contains(key))
                     {
-                        if (!readyPlayers.Contains(key))
-                        {
-                            Game1.server.kick(key);
-                            _monitor.Log("kicking due to not making past barrier: " + key);
-                        }
+                        Game1.server.kick(key);
+                        _monitor.Log("kicking due to not making past barrier: " + key);
                     }
                 }
+
             });
         }
 

@@ -6,7 +6,6 @@ namespace JunimoServer.Services.AlwaysOnServer
     {
         public SButton ServerHotKey { get; set; } = SButton.F9;
 
-        public int UpgradeHouse { get; set; } = 0;
         public string PetName { get; set; } = "Apples";
         public bool FarmCaveChoiceIsMushrooms { get; set; } = true;
         public bool IsCommunityCenterRun { get; set; } = true;

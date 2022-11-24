@@ -34,6 +34,9 @@ namespace JunimoServer
         private static readonly bool SteamAuthEnabled =
             bool.Parse(Environment.GetEnvironmentVariable("STEAM_AUTH_ENABLED") ?? "false");
 
+        private static readonly bool EnableModIncompatibleOptimizations =
+            bool.Parse(Environment.GetEnvironmentVariable("ENABLE_MOD_INCOMPATIBLE_OPTIMIZATIONS") ?? "true");
+        
         private static readonly string SteamAuthServerAddress =
             Environment.GetEnvironmentVariable("STEAM_AUTH_IP_PORT") ?? "localhost:50053";
 
@@ -77,7 +80,7 @@ namespace JunimoServer
             var options = new PersistentOptions(helper);
             var chatCommands = new ChatCommands(Monitor, harmony, helper);
             var cropSaver = new CropSaver(helper, harmony, Monitor);
-            _serverOptimizer = new ServerOptimizer(harmony, Monitor, helper, DisableRendering);
+            _serverOptimizer = new ServerOptimizer(harmony, Monitor, helper, DisableRendering, EnableModIncompatibleOptimizations);
             var alwaysOnServer = new AlwaysOnServer(helper, Monitor, chatCommands);
             _gameLoaderService = new GameLoaderService(helper, Monitor);
             _daemonService = new DaemonService(daemonHttpClient, Monitor);
@@ -104,10 +107,14 @@ namespace JunimoServer
                 _stardewGameServiceClient = new StardewGameService.StardewGameServiceClient(junimoBootGenChannel);
             }
             var hostBot = new HostBot(helper, Monitor);
-            CabinCommand.Register(helper, chatCommands, options, Monitor);
 
             var roleService = new RoleService(helper);
+            CabinCommand.Register(helper, chatCommands, options, Monitor);
             RoleCommands.Register(helper, chatCommands, roleService);
+            BanCommand.Register(helper, chatCommands, roleService);
+            KickCommand.Register(helper, chatCommands, roleService);
+            ListAdminsCommand.Register(helper, chatCommands, roleService);
+            ListBansCommand.Register(helper, chatCommands, roleService);
 
             helper.Events.Display.RenderedActiveMenu += OnRenderedActiveMenu;
             helper.Events.GameLoop.OneSecondUpdateTicked += OnOneSecondTicked;

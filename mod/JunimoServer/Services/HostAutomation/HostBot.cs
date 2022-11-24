@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using JunimoServer.Services.HostAutomation.Activities;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 
@@ -7,13 +8,14 @@ namespace JunimoServer.Services.HostAutomation
     public class HostBot
     {
 
-        private readonly ActivityList activities;
+        private readonly ActivityList _activities;
         public HostBot(IModHelper helper, IMonitor monitor)
         {
 
-            activities = new ActivityList
+            _activities = new ActivityList
             {
                 new HideHostActivity(),
+                new MatchFarmhouseToOwnerCabinLevelActivity(),
             };
             
             helper.Events.GameLoop.SaveLoaded += OnSaveLoaded;
@@ -22,16 +24,16 @@ namespace JunimoServer.Services.HostAutomation
         }
         private void OnDayStarted(object sender, DayStartedEventArgs e)
         {
-            activities.DayStartAll();
+            _activities.DayStartAll();
         }
         private void OnTick(object sender, UpdateTickedEventArgs e)
         {
-            activities.TickAll();
+            _activities.TickAll();
         }
 
         private void OnSaveLoaded(object sender, SaveLoadedEventArgs e)
         {
-          activities.EnableAll();
+          _activities.EnableAll();
         }
     }
 }

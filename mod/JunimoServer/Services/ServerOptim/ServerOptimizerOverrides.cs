@@ -13,6 +13,11 @@ namespace JunimoServer.Services.ServerOptim
             _monitor = monitor;
         }
 
+        public static bool Disable_Prefix()
+        {
+            return false;
+        }
+        
         // ReSharper disable once InconsistentNaming
         public static bool Draw_Prefix(GameRunner __instance)
 

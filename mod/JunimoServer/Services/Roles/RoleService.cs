@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using JunimoServer.Util;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
@@ -67,6 +68,11 @@ namespace JunimoServer.Services.Roles
         public bool IsPlayerAdmin(long playerId)
         {
             return _data.Roles.ContainsKey(playerId) && _data.Roles[playerId] == Role.Admin;
+        }
+
+        public long[] GetAdmins()
+        {
+           return _data.Roles.Keys.Where(IsPlayerAdmin).ToArray();
         }
     }
 }

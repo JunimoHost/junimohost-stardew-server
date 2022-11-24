@@ -45,6 +45,7 @@ namespace JunimoServer.Services.CropSaver
                 onlineIds.Add(farmer.UniqueMultiplayerID);
             }
 
+
             _cropSaverDataLoader.GetSaverCrops().ForEach(saverCrop =>
             {
                 var dirt = saverCrop.TryGetCoorespondingDirt();
@@ -73,25 +74,33 @@ namespace JunimoServer.Services.CropSaver
                 }
 
 
-                var dateOfDeath = CalculateDateOfDeath(crop, saverCrop);
+                var nightOfDeath = CalculateDateOfDeath(crop, saverCrop);
                 var fullyGrown = CalculateFullyGrown(crop);
-                
-                // _monitor.Log($"Crop owned by {saverCrop.ownerId} will die when sleeping on {dateOfDeath}");
+                var earliestFullyGrownDate = CalculateEarliestPossibleFullyGrownDate(crop, saverCrop);
+                var now = SDate.Now();
+                var isAfterDateOfDeath = now >= nightOfDeath;
 
-                var isAfterDateOfDeath = SDate.Now() >= dateOfDeath;
-
-                if (isAfterDateOfDeath && !(fullyGrown && onlineIds.Contains(saverCrop.ownerId)))
+                if (!fullyGrown && now.Day == 28 && nightOfDeath < earliestFullyGrownDate)
                 {
-                    _cropSaverDataLoader.RemoveCrop(saverCrop.cropLocationName, saverCrop.cropLocationTile);
-                    var dead = _helper.Reflection.GetField<NetBool>(crop, "dead").GetValue();
-                    var raisedSeeds = _helper.Reflection.GetField<NetBool>(crop, "raisedSeeds").GetValue();
-
-                    dead.Value = true;
-                    raisedSeeds.Value = false;
-                    
-                    _monitor.Log($"Killing crop owned by {saverCrop.ownerId}");
+                    KillCrop(saverCrop, crop);
+                }
+                else if (isAfterDateOfDeath && !(fullyGrown && onlineIds.Contains(saverCrop.ownerId)))
+                {
+                    KillCrop(saverCrop, crop);
                 }
             }
+        }
+        private void KillCrop(SaverCrop saverCrop, Crop crop)
+        {
+
+            _cropSaverDataLoader.RemoveCrop(saverCrop.cropLocationName, saverCrop.cropLocationTile);
+            var dead = _helper.Reflection.GetField<NetBool>(crop, "dead").GetValue();
+            var raisedSeeds = _helper.Reflection.GetField<NetBool>(crop, "raisedSeeds").GetValue();
+
+            dead.Value = true;
+            raisedSeeds.Value = false;
+
+            _monitor.Log($"Killing crop owned by {saverCrop.ownerId}");
         }
 
         private bool CalculateFullyGrown(Crop crop)
@@ -104,13 +113,42 @@ namespace JunimoServer.Services.CropSaver
             return fullyGrown;
         }
 
+
+        private SDate CalculateEarliestPossibleFullyGrownDate(Crop crop, SaverCrop saverCrop)
+        {
+            if (CalculateFullyGrown(crop)) return SDate.Now();
+
+            var dirt = saverCrop.TryGetCoorespondingDirt();
+            if (dirt == null) return SDate.Now();
+
+            var extraDayForUnwatered = 1;
+            if (dirt.state.Value == HoeDirt.watered)
+            {
+                extraDayForUnwatered = 0;
+            }
+
+            var phaseDays = _helper.Reflection.GetField<NetIntList>(crop, "phaseDays").GetValue();
+            var currentPhase = _helper.Reflection.GetField<NetInt>(crop, "currentPhase").GetValue().Value;
+
+            var daysOfCurrentPhase = _helper.Reflection.GetField<NetInt>(crop, "dayOfCurrentPhase").GetValue().Value;
+
+            var daysLeftOfCurrentPhase = phaseDays[currentPhase] - daysOfCurrentPhase;
+            var daysLeftOfPhasesUntilGrown = 0;
+
+            for (int i = currentPhase + 1; i < phaseDays.Count - 1; i++)
+            {
+                daysLeftOfPhasesUntilGrown += phaseDays[i];
+            }
+
+            return SDate.Now().AddDays(daysLeftOfCurrentPhase + daysLeftOfPhasesUntilGrown + extraDayForUnwatered);
+        }
         private static SDate CalculateDateOfDeath(Crop crop, SaverCrop saverCrop)
         {
             var numSeasons = crop.seasonsToGrowIn.Count -
                              (crop.seasonsToGrowIn.IndexOf(saverCrop.datePlanted.Season));
             var numDaysToLive = saverCrop.extraDays + (28 * numSeasons) - saverCrop.datePlanted.Day;
             var dateOfDeath = saverCrop.datePlanted.AddDays(numDaysToLive);
-            
+
             return dateOfDeath;
         }
 

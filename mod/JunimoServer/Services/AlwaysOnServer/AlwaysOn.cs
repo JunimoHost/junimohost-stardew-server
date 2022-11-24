@@ -118,8 +118,8 @@ namespace JunimoServer.Services.AlwaysOnServer
             float colorIntensity = 1f)
         {
             SpriteBatch spriteBatch = Game1.spriteBatch;
-            int width = (int) font.MeasureString(message).X + 32;
-            int num = (int) font.MeasureString(message).Y + 21;
+            int width = (int)font.MeasureString(message).X + 32;
+            int num = (int)font.MeasureString(message).Y + 21;
             switch (align)
             {
                 case 0:
@@ -186,7 +186,7 @@ namespace JunimoServer.Services.AlwaysOnServer
             Game1.chatBox.addInfoMessage("The host has returned!");
             Game1.displayHUD = true;
             Game1.addHUDMessage(new HUDMessage("Auto Mode Off!", ""));
-         
+
         }
 
         private void TurnOnAutoMode()
@@ -199,7 +199,7 @@ namespace JunimoServer.Services.AlwaysOnServer
             Game1.displayHUD = true;
             Game1.addHUDMessage(new HUDMessage("Auto Mode On!", ""));
 
-      
+
         }
 
         /// <summary>Raised after the player presses a button on the keyboard, controller, or mouse.</summary>
@@ -559,6 +559,50 @@ namespace JunimoServer.Services.AlwaysOnServer
                 menu.isProfessionChooser = false;
                 menu.RemoveLevelFromLevelList();
             }
+
+            if (IsAutomating)
+            {
+                //petchoice
+                if (!Game1.player.hasPet())
+                {
+                    _helper.Reflection.GetMethod(new Event(), "namePet").Invoke(this.Config.PetName.Substring(0));
+                }
+
+                if (Game1.player.hasPet() && Game1.getCharacterFromName(Game1.player.getPetName()) is Pet pet)
+                {
+                    pet.Name = this.Config.PetName.Substring(0);
+                    pet.displayName = this.Config.PetName.Substring(0);
+                }
+
+                //cave choice unlock 
+                if (!Game1.player.eventsSeen.Contains(65))
+                {
+                    Game1.player.eventsSeen.Add(65);
+
+
+                    if (this.Config.FarmCaveChoiceIsMushrooms)
+                    {
+                        Game1.MasterPlayer.caveChoice.Value = 2;
+                        (Game1.getLocationFromName("FarmCave") as FarmCave).setUpMushroomHouse();
+                    }
+                    else
+                    {
+                        Game1.MasterPlayer.caveChoice.Value = 1;
+                    }
+                }
+
+                //community center unlock
+                if (!Game1.player.eventsSeen.Contains(611439))
+                {
+                    Game1.player.eventsSeen.Add(611439);
+                    Game1.MasterPlayer.mailReceived.Add("ccDoorUnlock");
+                }
+
+         
+
+            }
+
+
         }
 
         //Pause game if no clients Code
@@ -647,46 +691,7 @@ namespace JunimoServer.Services.AlwaysOnServer
             // automate choices
             if (IsAutomating)
             {
-                //petchoice
-                if (!Game1.player.hasPet())
-                {
-                    _helper.Reflection.GetMethod(new Event(), "namePet").Invoke(this.Config.PetName.Substring(0));
-                }
 
-                if (Game1.player.hasPet() && Game1.getCharacterFromName(Game1.player.getPetName()) is Pet pet)
-                {
-                    pet.Name = this.Config.PetName.Substring(0);
-                    pet.displayName = this.Config.PetName.Substring(0);
-                }
-
-                //cave choice unlock 
-                if (!Game1.player.eventsSeen.Contains(65))
-                {
-                    Game1.player.eventsSeen.Add(65);
-
-
-                    if (this.Config.FarmCaveChoiceIsMushrooms)
-                    {
-                        Game1.MasterPlayer.caveChoice.Value = 2;
-                        (Game1.getLocationFromName("FarmCave") as FarmCave).setUpMushroomHouse();
-                    }
-                    else
-                    {
-                        Game1.MasterPlayer.caveChoice.Value = 1;
-                    }
-                }
-
-                //community center unlock
-                if (!Game1.player.eventsSeen.Contains(611439))
-                {
-                    Game1.player.eventsSeen.Add(611439);
-                    Game1.MasterPlayer.mailReceived.Add("ccDoorUnlock");
-                }
-
-                if (this.Config.UpgradeHouse != 0 && Game1.player.HouseUpgradeLevel != this.Config.UpgradeHouse)
-                {
-                    Game1.player.HouseUpgradeLevel = this.Config.UpgradeHouse;
-                }
 
                 // just turns off auto mod if the game gets exited back to title screen
                 if (Game1.activeClickableMenu is TitleMenu)
