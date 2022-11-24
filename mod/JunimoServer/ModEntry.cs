@@ -36,7 +36,7 @@ namespace JunimoServer
 
         private static readonly bool EnableModIncompatibleOptimizations =
             bool.Parse(Environment.GetEnvironmentVariable("ENABLE_MOD_INCOMPATIBLE_OPTIMIZATIONS") ?? "true");
-        
+
         private static readonly string SteamAuthServerAddress =
             Environment.GetEnvironmentVariable("STEAM_AUTH_IP_PORT") ?? "localhost:50053";
 
@@ -115,6 +115,7 @@ namespace JunimoServer
             KickCommand.Register(helper, chatCommands, roleService);
             ListAdminsCommand.Register(helper, chatCommands, roleService);
             ListBansCommand.Register(helper, chatCommands, roleService);
+            UnbanCommand.Register(helper, chatCommands, roleService);
 
             helper.Events.Display.RenderedActiveMenu += OnRenderedActiveMenu;
             helper.Events.GameLoop.OneSecondUpdateTicked += OnOneSecondTicked;
@@ -144,7 +145,7 @@ namespace JunimoServer
             var networkingIsNeededButNotReady = SteamAuthEnabled && !isNetworkingReady;
             if (!_titleLaunched || networkingIsNeededButNotReady) return;
             _gameStarted = true;
-            
+
             if (ForceNewDebugGame)
             {
                 var config = new NewGameConfig
@@ -217,8 +218,8 @@ namespace JunimoServer
 
         private async void SendHealthCheck(string inviteCode)
         {
-            if(JunimoBootServerAddress == "") return;
-            
+            if (JunimoBootServerAddress == "") return;
+
             try
             {
                 await _stardewGameServiceClient.GameHealthCheckAsync(new GameHealthCheckRequest
