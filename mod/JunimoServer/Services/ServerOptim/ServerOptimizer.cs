@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Diagnostics;
 using HarmonyLib;
+using Microsoft.VisualBasic;
+using Microsoft.VisualBasic.CompilerServices;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
@@ -9,6 +12,7 @@ namespace JunimoServer.Services.ServerOptim
     public class ServerOptimizer
     {
         private readonly bool _disableRendering;
+        private readonly IMonitor _monitor;
 
         public ServerOptimizer(
             Harmony harmony,
@@ -18,6 +22,7 @@ namespace JunimoServer.Services.ServerOptim
             bool enableModIncompatibleOptimizations
         )
         {
+            _monitor = monitor;
             _disableRendering = disableRendering;
             ServerOptimizerOverrides.Initialize(monitor);
             harmony.Patch(
@@ -89,8 +94,19 @@ namespace JunimoServer.Services.ServerOptim
 
             helper.Events.GameLoop.DayStarted += OnDayStarted;
             helper.Events.GameLoop.Saving += OnSaving;
+            helper.Events.GameLoop.DayEnding += OnDayEnding;
 
+        }
 
+        private void OnDayEnding(object sender, DayEndingEventArgs e)
+        {
+            var before = checked ((long) Math.Round(Process.GetCurrentProcess().PrivateMemorySize64 / 1024.0 / 1024.0));
+            _monitor.Log($"Running GC", LogLevel.Info);
+            GC.Collect();
+            var after = checked ((long) Math.Round(Process.GetCurrentProcess().PrivateMemorySize64 / 1024.0 / 1024.0));
+            var beforeFormated = Strings.Format(before / 1024.0, "0.00") + " GB";
+            var afterFormated = Strings.Format(after / 1024.0, "0.00") + " GB";
+            _monitor.Log($"Ran GC {beforeFormated} -> {afterFormated}", LogLevel.Info);
         }
 
         private void OnDayStarted(object sender, DayStartedEventArgs e)
