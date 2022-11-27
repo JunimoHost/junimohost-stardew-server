@@ -61,12 +61,18 @@ namespace JunimoServer.Services.ServerOptim
                 original: AccessTools.Method("StardewValley.BellsAndWhistles.AmbientLocationSounds:update"),
                 prefix: new HarmonyMethod(typeof(ServerOptimizerOverrides),
                     nameof(ServerOptimizerOverrides.Disable_Prefix)));
+
+            harmony.Patch(
+                original: AccessTools.Method("StardewModdingAPI.Framework.SCore:OnInstanceContentLoaded"),
+                prefix: new HarmonyMethod(typeof(ServerOptimizerOverrides),
+                    nameof(ServerOptimizerOverrides.AssignNullDisplay_Prefix)));
             
             harmony.Patch(
-                original: AccessTools.Method("StardewValley.AnimatedSprite:StopAnimation"),
+                original: AccessTools.Method("StardewModdingAPI.Framework.SCore:GetMapDisplayDevice"),
                 prefix: new HarmonyMethod(typeof(ServerOptimizerOverrides),
-                    nameof(ServerOptimizerOverrides.Disable_Prefix)));
+                    nameof(ServerOptimizerOverrides.ReturnNullDisplay_Prefix)));
             
+
             if (enableModIncompatibleOptimizations)
             {
                 harmony.Patch(
