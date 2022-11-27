@@ -23,7 +23,25 @@ namespace JunimoServer.Services.GalaxyAuth
             _helper = helper;
             _steamAuthClient = steamAuthClient;
         }
-        
+
+
+        public static void Relog()
+        {
+            _monitor.Log("Galaxy auth lost Relogging", LogLevel.Info);
+            try
+            {
+                _monitor.Log("Testing Sign Out", LogLevel.Info);
+                GalaxyInstance.User().SignOut();
+            }
+            catch (Exception e)
+            {
+                _monitor.Log(e.ToString(), LogLevel.Error);
+            }
+            _monitor.Log("Signing In", LogLevel.Info);
+            var ticket = _steamAuthClient.GetSteamTicket(new GetSteamTicketRequest());
+            GalaxyInstance.User().SignInSteam(ticket.Ticket.ToByteArray(), Convert.ToUInt32(ticket.TicketLength), ticket.Name);
+
+        }
 
         public static bool SteamHelperInitialize_Prefix(SteamHelper __instance)
         {
@@ -32,8 +50,6 @@ namespace JunimoServer.Services.GalaxyAuth
             var onGalaxyAuthFailure =
                 new Action<IAuthListener.FailureReason>((reason) =>
                     _helper.Reflection.GetMethod(__instance, "onGalaxyAuthFailure").Invoke(reason));
-            var onGalaxyAuthLost =
-                new Action(() => _helper.Reflection.GetMethod(__instance, "onGalaxyAuthLost").Invoke());
 
             var onGalaxyStateChange =
                 new Action<uint>((num) => _helper.Reflection.GetMethod(__instance, "onGalaxyStateChange").Invoke(num));
@@ -50,7 +66,7 @@ namespace JunimoServer.Services.GalaxyAuth
                         "58be5c2e55d7f535cf8c4b6bbc09d185de90b152c8c42703cc13502465f0d04a", "."));
 
                     _authListener =
-                        new GalaxyHelper.AuthListener(onGalaxyAuthSuccess, onGalaxyAuthFailure, onGalaxyAuthLost);
+                        new GalaxyHelper.AuthListener(onGalaxyAuthSuccess, onGalaxyAuthFailure, Relog);
                     _stateChangeListener = new GalaxyHelper.OperationalStateChangeListener(onGalaxyStateChange);
 
                     Console.WriteLine("Requesting Steam app ticket");
