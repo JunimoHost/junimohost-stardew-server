@@ -61,8 +61,12 @@ namespace JunimoServer.Services.ServerOptim
                 original: AccessTools.Method("StardewValley.BellsAndWhistles.AmbientLocationSounds:update"),
                 prefix: new HarmonyMethod(typeof(ServerOptimizerOverrides),
                     nameof(ServerOptimizerOverrides.Disable_Prefix)));
-
-
+            
+            harmony.Patch(
+                original: AccessTools.Method("StardewValley.AnimatedSprite:StopAnimation"),
+                prefix: new HarmonyMethod(typeof(ServerOptimizerOverrides),
+                    nameof(ServerOptimizerOverrides.Disable_Prefix)));
+            
             if (enableModIncompatibleOptimizations)
             {
                 harmony.Patch(
@@ -102,7 +106,9 @@ namespace JunimoServer.Services.ServerOptim
         {
             var before = checked ((long) Math.Round(Process.GetCurrentProcess().PrivateMemorySize64 / 1024.0 / 1024.0));
             _monitor.Log($"Running GC", LogLevel.Info);
-            GC.Collect();
+            GC.Collect(generation: 0, GCCollectionMode.Forced, blocking: true);
+            GC.Collect(generation: 1, GCCollectionMode.Forced, blocking: true);
+            GC.Collect(generation: 2, GCCollectionMode.Forced, blocking: true);
             var after = checked ((long) Math.Round(Process.GetCurrentProcess().PrivateMemorySize64 / 1024.0 / 1024.0));
             var beforeFormated = Strings.Format(before / 1024.0, "0.00") + " GB";
             var afterFormated = Strings.Format(after / 1024.0, "0.00") + " GB";
