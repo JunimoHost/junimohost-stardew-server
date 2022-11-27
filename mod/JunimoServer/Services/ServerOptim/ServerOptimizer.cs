@@ -62,6 +62,16 @@ namespace JunimoServer.Services.ServerOptim
                 prefix: new HarmonyMethod(typeof(ServerOptimizerOverrides),
                     nameof(ServerOptimizerOverrides.Disable_Prefix)));
 
+            harmony.Patch(
+                original: AccessTools.Method("StardewModdingAPI.Framework.SCore:OnInstanceContentLoaded"),
+                prefix: new HarmonyMethod(typeof(ServerOptimizerOverrides),
+                    nameof(ServerOptimizerOverrides.AssignNullDisplay_Prefix)));
+            
+            harmony.Patch(
+                original: AccessTools.Method("StardewModdingAPI.Framework.SCore:GetMapDisplayDevice"),
+                prefix: new HarmonyMethod(typeof(ServerOptimizerOverrides),
+                    nameof(ServerOptimizerOverrides.ReturnNullDisplay_Prefix)));
+            
 
             if (enableModIncompatibleOptimizations)
             {

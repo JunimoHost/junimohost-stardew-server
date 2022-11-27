@@ -1,5 +1,6 @@
 ﻿using StardewModdingAPI;
 using StardewValley;
+using xTile.Display;
 
 namespace JunimoServer.Services.ServerOptim
 {
@@ -13,7 +14,20 @@ namespace JunimoServer.Services.ServerOptim
             _monitor = monitor;
         }
 
-        public static bool Disable_Prefix()
+        
+        public static bool AssignNullDisplay_Prefix()
+        {
+            Game1.mapDisplayDevice = new NullDisplayDevice();
+            return false;
+        }
+        
+        public static bool ReturnNullDisplay_Prefix(IDisplayDevice __result)
+        {
+            __result = new NullDisplayDevice();
+            return false;
+        }
+
+    public static bool Disable_Prefix()
         {
             return false;
         }
