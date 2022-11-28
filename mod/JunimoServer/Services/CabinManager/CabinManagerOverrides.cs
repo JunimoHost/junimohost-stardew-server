@@ -105,8 +105,9 @@ namespace JunimoServer.Services.CabinManager
             return building.tileX.Value == CabinManagerService.HiddenCabinX
                    && building.tileY.Value == CabinManagerService.HiddenCabinY;
         }
-        public static List<OriginalBuildingCoord> MoveCabinsAway(long playerId, Vector2 cabinStackLocation)
+        public static List<OriginalBuildingCoord> MoveCabinsAway(long playerId)
         {
+            var cabinStack = GetStackLocation();
             var farm = Game1.getFarm();
             var movedBuildings = new List<OriginalBuildingCoord>();
             var cabinsToMove = GetCabinsToMove(playerId);
@@ -130,18 +131,18 @@ namespace JunimoServer.Services.CabinManager
             // CabinStack Strategy
             var ownerCabin = Game1.getFarm().buildings.First(building => building.isCabin);
 
-            var stackX = (int)Math.Round(cabinStackLocation.X, 0);
-            var stackY = (int)Math.Round(cabinStackLocation.Y, 0);
+            var stackX = (int)Math.Round(cabinStack.Location.X, 0);
+            var stackY = (int)Math.Round(cabinStack.Location.Y, 0);
 
             // make sure a cabin is in the stack if player's cabin was moved out of it so they dont see nothing
-            if (cabinsToMove.Length == 0 || playerId == ((Cabin)ownerCabin.indoors.Value).owner.UniqueMultiplayerID)
+            if (cabinStack.CabinChosen == null && (cabinsToMove.Length == 0 || playerId == ((Cabin)ownerCabin.indoors.Value).owner.UniqueMultiplayerID))
             {
                 var firstNonOwnerStackedCabin = Game1.getFarm().buildings
-                                           .FirstOrDefault(building =>
-                                               building.isCabin
-                                               && IsBuildingInHiddenStack(building)
-                                               && building != ownerCabin)
-                                       ?? ownerCabin;
+                                                    .FirstOrDefault(building =>
+                                                        building.isCabin
+                                                        && IsBuildingInHiddenStack(building)
+                                                        && building != ownerCabin)
+                                                ?? ownerCabin;
 
                 cabinsToMove = new[]
                 {
@@ -150,11 +151,25 @@ namespace JunimoServer.Services.CabinManager
             }
 
             // handle updating owner cabin warp to outside
-            foreach (var warp in ((Cabin)ownerCabin.indoors.Value).warps.Where(warp => warp.TargetName == "Farm"))
+            if (cabinStack.CabinChosen != ownerCabin)
             {
-                warp.TargetX = farm.GetMainFarmHouseEntry().X;
-                warp.TargetY = farm.GetMainFarmHouseEntry().Y;
+                foreach (var warp in ((Cabin)ownerCabin.indoors.Value).warps.Where(warp => warp.TargetName == "Farm"))
+                {
+                    warp.TargetX = farm.GetMainFarmHouseEntry().X;
+                    warp.TargetY = farm.GetMainFarmHouseEntry().Y;
+                }
             }
+
+            var playersCabinGettingMoved = cabinsToMove.FirstOrDefault(building => ((Cabin)building.indoors.Value).owner.UniqueMultiplayerID == playerId);
+            if (cabinStack.CabinChosen != null && playersCabinGettingMoved != null)
+            {
+                var building = cabinStack.CabinChosen;
+                var original = new OriginalBuildingCoord(building, building.tileX.Value, building.tileY.Value);
+                movedBuildings.Add(original);
+                building.tileX.Value = CabinManagerService.HiddenCabinX - 1;
+                building.tileY.Value = CabinManagerService.HiddenCabinY - 1;
+            }
+
 
             // handle normal cabins
             foreach (var building in cabinsToMove)
@@ -177,7 +192,7 @@ namespace JunimoServer.Services.CabinManager
 
             return movedBuildings;
         }
-        private static Vector2 GetStackLocation()
+        private static StackLocation GetStackLocation()
         {
 
             var nonHiddenCabins = Game1.getFarm().buildings.Where(building => building.isCabin && !IsBuildingInHiddenStack(building)).ToArray();
@@ -187,8 +202,27 @@ namespace JunimoServer.Services.CabinManager
                 cabinLocation = new Vector2(nonHiddenCabins.First().tileX.Value, nonHiddenCabins.First().tileY.Value);
             }
 
-            var stackLocation = _cabinManagerData.DefaultCabinLocation ?? cabinLocation ?? new Vector2(50, 14);
-            return stackLocation;
+            if (_cabinManagerData.DefaultCabinLocation.HasValue)
+            {
+                return new StackLocation(_cabinManagerData.DefaultCabinLocation.Value, null);
+            }
+
+            if (cabinLocation.HasValue)
+            {
+                return new StackLocation(cabinLocation.Value, nonHiddenCabins.First());
+            }
+            return new StackLocation(new Vector2(50, 14), null);
+        }
+
+        private struct StackLocation
+        {
+            public Vector2 Location;
+            public Building CabinChosen;
+            public StackLocation(Vector2 location, Building cabinChosen)
+            {
+                Location = location;
+                CabinChosen = cabinChosen;
+            }
         }
 
         public static void MoveCabinsHome(List<OriginalBuildingCoord> originalBuildingCoords)
@@ -209,7 +243,7 @@ namespace JunimoServer.Services.CabinManager
         public static void sendLocation_Prefix(GameServer __instance, long peer, GameLocation location,
             bool force_current, out List<OriginalBuildingCoord> __state)
         {
-            __state = MoveCabinsAway(peer, GetStackLocation());
+            __state = MoveCabinsAway(peer);
         }
 
         public static void sendLocation_Postfix(GameServer __instance, long peer, GameLocation location,
@@ -241,7 +275,7 @@ namespace JunimoServer.Services.CabinManager
                     var farm = Game1.getFarm();
 
 
-                    var movedBuildings = MoveCabinsAway(f.UniqueMultiplayerID, GetStackLocation());
+                    var movedBuildings = MoveCabinsAway(f.UniqueMultiplayerID);
 
                     byte[] data = __instance.writeObjectDeltaBytes(farm.Root as NetRoot<GameLocation>);
 
