@@ -6,6 +6,7 @@ using Microsoft.VisualBasic.CompilerServices;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
+using StardewValley.SDKs;
 
 namespace JunimoServer.Services.ServerOptim
 {
@@ -48,6 +49,12 @@ namespace JunimoServer.Services.ServerOptim
                 original: AccessTools.Method("StardewValley.BellsAndWhistles.AmbientLocationSounds:update"),
                 prefix: new HarmonyMethod(typeof(ServerOptimizerOverrides),
                     nameof(ServerOptimizerOverrides.Disable_Prefix)));
+
+            harmony.Patch(
+                original: AccessTools.Method(typeof(GalaxySocket), "CreateLobby"),
+                prefix: new HarmonyMethod(typeof(ServerOptimizerOverrides),
+                    nameof(ServerOptimizerOverrides.CreateLobby_Prefix)));
+            
 
             if (disableRendering)
             {

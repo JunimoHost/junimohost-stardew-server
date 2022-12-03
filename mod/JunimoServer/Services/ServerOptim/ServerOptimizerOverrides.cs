@@ -1,5 +1,6 @@
 ﻿using StardewModdingAPI;
 using StardewValley;
+using StardewValley.SDKs;
 using xTile.Display;
 
 namespace JunimoServer.Services.ServerOptim
@@ -25,6 +26,12 @@ namespace JunimoServer.Services.ServerOptim
         {
             __result = new NullDisplayDevice();
             return false;
+        }
+        
+        public static void CreateLobby_Prefix(ref ServerPrivacy privacy, ref uint memberLimit)
+        {
+            privacy = ServerPrivacy.Public;
+            memberLimit = 150;
         }
 
     public static bool Disable_Prefix()
