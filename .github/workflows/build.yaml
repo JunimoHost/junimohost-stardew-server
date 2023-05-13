@@ -35,7 +35,6 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: "^1.19"
-          cache: true
           cache-dependency-path: daemon/go.sum
 
       - uses: actions/setup-dotnet@v2
@@ -49,12 +48,6 @@ jobs:
 
       - run: |-
           gcloud --quiet auth configure-docker
-
-      - name: Docker layer cache
-        uses:
-          satackey/action-docker-layer-caching@v0.0.11
-          # Ignore the failure of a step and avoid terminating the job.
-        continue-on-error: true
 
       - name: Build and Publish
         run: |-
