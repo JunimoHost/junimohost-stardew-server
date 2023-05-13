@@ -20,14 +20,18 @@ namespace JunimoServer.Services.CabinManager
         private static PersistentOptions _options;
         private static Action<long> _onServerJoined;
 
-        public static void Initialize(IModHelper helper, IMonitor monitor, CabinManagerData cabinManagerData,
+        public static void Initialize(IModHelper helper, IMonitor monitor,
             PersistentOptions options, Action<long> onServerJoined)
         {
             _helper = helper;
             _monitor = monitor;
-            _cabinManagerData = cabinManagerData;
             _options = options;
             _onServerJoined = onServerJoined;
+        }
+
+        public static void SetCabinManagerData(CabinManagerData cabinManagerData)
+        {
+            _cabinManagerData = cabinManagerData;
         }
 
         public static void sendServerIntroduction_Postfix(long peer)
