@@ -32,11 +32,6 @@ jobs:
           echo -e "2\n\n" | ./smapi/SMAPI\ 3.18.3\ installer/internal/linux/SMAPI.Installer --install --game-path "/home/runner/actions-runner/_work/junimohost-stardew-server/junimohost-stardew-server/Stardew Valley"
         continue-on-error: true # runs installer twice for some reason, fails on second time, but succeeds on first
 
-      - uses: actions/setup-go@v3
-        with:
-          go-version: "^1.19"
-          cache-dependency-path: daemon/go.sum
-
       - uses: actions/setup-dotnet@v2
         with:
           dotnet-version: "6.0.302"
