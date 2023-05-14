@@ -6,7 +6,7 @@ WORKDIR /app
 
 # Install Go 1.19
 RUN apt-get update && \
-    apt-get install -y wget git && \
+    apt-get install -y wget && \
     wget https://golang.org/dl/go1.19.2.linux-amd64.tar.gz && \
     tar -C /usr/local -xzf go1.19.2.linux-amd64.tar.gz && \
     rm go1.19.2.linux-amd64.tar.gz
@@ -24,11 +24,10 @@ COPY daemon/go.mod daemon/go.sum ./
 # Dependencies will be cached if the go.mod and go.sum files are not changed 
 RUN go mod download 
 
-# Copy the source from the current directory to the Working Directory inside the container 
 COPY daemon .
 
 # Build the Go app
-RUN cd daemon && go build -o game-daemon ./cmd/daemon/daemon.go
+RUN go build -o game-daemon ./cmd/daemon/daemon.go
 
 # --- Final Stage ---
 FROM jlesage/baseimage-gui:debian-11
@@ -74,7 +73,7 @@ RUN rm "/data/Stardew/Stardew Valley/Content/XACT/Wave Bank.xwb" "/data/Stardew/
 COPY ["docker/mods", "/data/Stardew/Stardew Valley/Mods/"]
 RUN chmod -R 777 /data/Stardew/Stardew\ Valley/Mods
 
-COPY --from=build-stage /app/daemon/game-daemon /opt/game-daemon
+COPY --from=build-stage /app/game-daemon /opt/game-daemon
 RUN chmod +x /opt/game-daemon
 
 COPY docker/docker-entrypoint.sh /startapp.sh
