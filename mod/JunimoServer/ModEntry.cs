@@ -116,6 +116,7 @@ namespace JunimoServer
             ListAdminsCommand.Register(helper, chatCommands, roleService);
             ListBansCommand.Register(helper, chatCommands, roleService);
             UnbanCommand.Register(helper, chatCommands, roleService);
+            ChangeWalletCommand.Register(helper, chatCommands, roleService);
 
             helper.Events.Display.RenderedActiveMenu += OnRenderedActiveMenu;
             helper.Events.GameLoop.OneSecondUpdateTicked += OnOneSecondTicked;

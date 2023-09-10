@@ -1,4 +1,4 @@
-VERSION=v0.17.26
+VERSION=v0.18.0
 
 build: docker/mods/JunimoServer $(shell find docker -type f)
 	docker build --platform=amd64 -t gcr.io/junimo-host/stardew-base:$(VERSION) -f docker/Dockerfile .
