@@ -14,6 +14,7 @@ else
 	cd mod && dotnet build -o ./build --configuration Release
 endif
 	mkdir -p ./docker/mods/JunimoServer
+	ls ./mod/build
 	cp ./mod/build/JunimoServer.dll ./mod/build/JunimoServer.pdb ./mod/build/Microsoft.Extensions.Logging.Abstractions.dll ./mod/build/Google.Protobuf.dll ./mod/build/Grpc.Core.Api.dll ./mod/build/Grpc.Net.Client.dll ./mod/build/Grpc.Net.Common.dll ./mod/JunimoServer/manifest.json ./docker/mods/JunimoServer
 
 game-daemon: $(shell find daemon -type f)
