@@ -7,9 +7,9 @@ WORKDIR /app
 # Install Go 1.19
 RUN apt-get update && \
     apt-get install -y wget && \
-    wget https://golang.org/dl/go1.19.2.linux-amd64.tar.gz && \
-    tar -C /usr/local -xzf go1.19.2.linux-amd64.tar.gz && \
-    rm go1.19.2.linux-amd64.tar.gz
+    wget https://golang.org/dl/go1.21.3.linux-amd64.tar.gz && \
+    tar -C /usr/local -xzf go1.21.3.linux-amd64.tar.gz && \
+    rm go1.21.3.linux-amd64.tar.gz
 
 # Add Go to PATH
 ENV PATH="/usr/local/go/bin:${PATH}"
