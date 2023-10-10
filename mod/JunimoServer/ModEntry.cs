@@ -44,7 +44,7 @@ namespace JunimoServer
             Environment.GetEnvironmentVariable("BACKEND_HOSTPORT") ?? "";
 
         private static readonly int HealthCheckSeconds =
-            Int32.Parse(Environment.GetEnvironmentVariable("HEALTH_CHECK_SECONDS") ?? "10");
+            Int32.Parse(Environment.GetEnvironmentVariable("HEALTH_CHECK_SECONDS") ?? "15");
 
         private static readonly string ServerId =
             Environment.GetEnvironmentVariable("SERVER_ID") ?? "test";
@@ -66,6 +66,8 @@ namespace JunimoServer
         private bool _titleLaunched = false;
         private bool _gameStarted = false;
         private int _healthCheckTimer = 0;
+        private DateTime? _lastNullCodeTime = null;
+
 
 
         public override void Entry(IModHelper helper)
@@ -188,6 +190,10 @@ namespace JunimoServer
             }
         }
 
+        private bool HasDurationPassedSinceLastNullCode(TimeSpan duration)
+        {
+            return _lastNullCodeTime.HasValue && (DateTime.Now - _lastNullCodeTime.Value) >= duration;
+        }
 
         private void RunHealthCheck()
         {
@@ -203,12 +209,18 @@ namespace JunimoServer
             {
                 if (Game1.server.getInviteCode() != null)
                 {
-                    Monitor.Log(Game1.server.getInviteCode(), LogLevel.Info);
+                    // Monitor.Log(Game1.server.getInviteCode(), LogLevel.Info);
                     Task.Run(() => { SendHealthCheck(Game1.server.getInviteCode()); });
                 }
                 else
                 {
                     Monitor.Log("Invite code is null", LogLevel.Info);
+                    _lastNullCodeTime ??= DateTime.Now;
+
+                    if (HasDurationPassedSinceLastNullCode(TimeSpan.FromMinutes(2)))
+                    {
+                        Environment.Exit(0); //let kubernetes restart the pod.
+                    }
                 }
             }
             else
