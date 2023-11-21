@@ -2,7 +2,7 @@
 
 namespace JunimoServer.Services.AlwaysOnServer
 {
-    class AlwaysOnConfig
+    public class AlwaysOnConfig
     {
         public SButton ServerHotKey { get; set; } = SButton.F9;
 

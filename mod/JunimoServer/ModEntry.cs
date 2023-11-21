@@ -83,7 +83,8 @@ namespace JunimoServer
             var chatCommands = new ChatCommands(Monitor, harmony, helper);
             var cropSaver = new CropSaver(helper, harmony, Monitor);
             _serverOptimizer = new ServerOptimizer(harmony, Monitor, helper, DisableRendering, EnableModIncompatibleOptimizations);
-            var alwaysOnServer = new AlwaysOnServer(helper, Monitor, chatCommands);
+            var alwaysOnConfig = new AlwaysOnConfig();
+            var alwaysOnServer = new AlwaysOnServer(helper, Monitor, chatCommands, alwaysOnConfig);
             _gameLoaderService = new GameLoaderService(helper, Monitor);
             _daemonService = new DaemonService(daemonHttpClient, Monitor);
             var backupService = new BackupService(daemonHttpClient, Monitor);
@@ -94,7 +95,7 @@ namespace JunimoServer
                 new GameCreatorService(_gameLoaderService, options, Monitor, _daemonService, cabinManager);
             var networkTweaker = new NetworkTweaker(helper, options);
             var desyncKicker = new DesyncKicker(helper, Monitor);
-
+            
             if (SteamAuthEnabled)
             {
                 var steamTicketGenChannel = GrpcChannel.ForAddress($"http://{SteamAuthServerAddress}");
@@ -119,6 +120,7 @@ namespace JunimoServer
             ListBansCommand.Register(helper, chatCommands, roleService);
             UnbanCommand.Register(helper, chatCommands, roleService);
             ChangeWalletCommand.Register(helper, chatCommands, roleService);
+            JojaCommand.Register(helper, chatCommands, roleService, alwaysOnConfig);
 
             helper.Events.Display.RenderedActiveMenu += OnRenderedActiveMenu;
             helper.Events.GameLoop.OneSecondUpdateTicked += OnOneSecondTicked;

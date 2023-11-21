@@ -6,7 +6,6 @@ using StardewModdingAPI.Events;
 
 namespace JunimoServer.Services.Roles
 {
-
     public enum Role
     {
         Admin,
@@ -16,7 +15,6 @@ namespace JunimoServer.Services.Roles
     public class RoleData
     {
         public Dictionary<long, Role> Roles = new Dictionary<long, Role>();
-
     }
 
     public class RoleService
@@ -26,12 +24,13 @@ namespace JunimoServer.Services.Roles
 
 
         private readonly IModHelper _helper;
+
         public RoleService(IModHelper helper)
         {
             _helper = helper;
             helper.Events.GameLoop.SaveLoaded += OnSaveLoaded;
-
         }
+
         private void OnSaveLoaded(object sender, SaveLoadedEventArgs e)
         {
             var saveData = _helper.Data.ReadSaveData<RoleData>(RoleDataKey);
@@ -70,9 +69,14 @@ namespace JunimoServer.Services.Roles
             return _data.Roles.ContainsKey(playerId) && _data.Roles[playerId] == Role.Admin;
         }
 
+        public bool IsPlayerOwner(long playerId)
+        {
+            return _helper.GetOwnerPlayerId() == playerId;
+        }
+
         public long[] GetAdmins()
         {
-           return _data.Roles.Keys.Where(IsPlayerAdmin).ToArray();
+            return _data.Roles.Keys.Where(IsPlayerAdmin).ToArray();
         }
     }
 }

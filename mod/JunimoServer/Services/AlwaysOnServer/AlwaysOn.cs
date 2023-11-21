@@ -20,9 +20,6 @@ namespace JunimoServer.Services.AlwaysOnServer
     {
         private const string StartNowText = "Type !event to start now";
 
-        /// <summary>The mod configuration from the player.</summary>
-        private readonly AlwaysOnConfig Config = new AlwaysOnConfig();
-
         /// <summary>Whether the main player is currently being automated.</summary>
         private bool IsAutomating;
 
@@ -69,12 +66,14 @@ namespace JunimoServer.Services.AlwaysOnServer
 
         private readonly IModHelper _helper;
         private readonly IMonitor _monitor;
+        private readonly AlwaysOnConfig Config;
 
 
-        public AlwaysOnServer(IModHelper helper, IMonitor monitor, IChatCommandApi chatCommandApi)
+        public AlwaysOnServer(IModHelper helper, IMonitor monitor, IChatCommandApi chatCommandApi, AlwaysOnConfig config)
         {
             _helper = helper;
             _monitor = monitor;
+            Config = config;
 
 
             helper.ConsoleCommands.Add("server", "Toggles headless 'auto mode' on/off", this.ToggleAutoMode);
