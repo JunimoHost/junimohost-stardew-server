@@ -4,12 +4,12 @@ FROM jlesage/baseimage-gui:debian-11 as build-stage
 
 WORKDIR /app
 
-# Install Go 1.19
+# Install Go 1.21
 RUN apt-get update && \
     apt-get install -y wget && \
-    wget https://golang.org/dl/go1.21.3.linux-amd64.tar.gz && \
-    tar -C /usr/local -xzf go1.21.3.linux-amd64.tar.gz && \
-    rm go1.21.3.linux-amd64.tar.gz
+    wget https://golang.org/dl/go1.21.5.linux-amd64.tar.gz && \
+    tar -C /usr/local -xzf go1.21.5.linux-amd64.tar.gz && \
+    rm go1.21.5.linux-amd64.tar.gz
 
 # Add Go to PATH
 ENV PATH="/usr/local/go/bin:${PATH}"
