@@ -69,7 +69,6 @@ namespace JunimoServer
         private DateTime? _lastNullCodeTime = null;
 
 
-
         public override void Entry(IModHelper helper)
         {
             Game1.options.pauseWhenOutOfFocus = false;
@@ -95,7 +94,7 @@ namespace JunimoServer
                 new GameCreatorService(_gameLoaderService, options, Monitor, _daemonService, cabinManager);
             var networkTweaker = new NetworkTweaker(helper, options);
             var desyncKicker = new DesyncKicker(helper, Monitor);
-            
+
             if (SteamAuthEnabled)
             {
                 var steamTicketGenChannel = GrpcChannel.ForAddress($"http://{SteamAuthServerAddress}");
@@ -109,6 +108,7 @@ namespace JunimoServer
                 var junimoBootGenChannel = GrpcChannel.ForAddress($"http://{JunimoBootServerAddress}");
                 _stardewGameServiceClient = new StardewGameService.StardewGameServiceClient(junimoBootGenChannel);
             }
+
             var hostBot = new HostBot(helper, Monitor);
 
             var roleService = new RoleService(helper);
@@ -121,6 +121,7 @@ namespace JunimoServer
             UnbanCommand.Register(helper, chatCommands, roleService);
             ChangeWalletCommand.Register(helper, chatCommands, roleService);
             JojaCommand.Register(helper, chatCommands, roleService, alwaysOnConfig);
+            ConsoleCommand.Register(helper, chatCommands, roleService);
 
             helper.Events.Display.RenderedActiveMenu += OnRenderedActiveMenu;
             helper.Events.GameLoop.OneSecondUpdateTicked += OnOneSecondTicked;
