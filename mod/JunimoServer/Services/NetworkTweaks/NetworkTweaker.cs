@@ -9,6 +9,8 @@ namespace JunimoServer.Services.NetworkTweaks
     {
         private readonly PersistentOptions _options;
         private readonly IModHelper _helper;
+        private Multiplayer _multiplayer;
+
         public NetworkTweaker(IModHelper helper, PersistentOptions options)
         {
 
@@ -16,19 +18,22 @@ namespace JunimoServer.Services.NetworkTweaks
             _helper = helper;
             helper.Events.GameLoop.UpdateTicked += OnTick;
         }
+        
         private void OnTick(object sender, UpdateTickedEventArgs e)
         {
             
             if (Game1.netWorldState == null || !Game1.hasLoadedGame) return;
+
+            _multiplayer ??= _helper.Reflection.GetField<Multiplayer>(typeof(Game1), "multiplayer").GetValue();
+
+            _multiplayer.defaultInterpolationTicks = 6;
+            _multiplayer.farmerDeltaBroadcastPeriod = 1;
+            _multiplayer.locationDeltaBroadcastPeriod = 1;
+            _multiplayer.worldStateDeltaBroadcastPeriod = 1;
             
-            var multiplayer = _helper.Reflection.GetField<Multiplayer>(typeof(Game1), "multiplayer").GetValue();
             var maxPlayers = _options.Data.MaxPlayers;
-
-            if (maxPlayers != multiplayer.playerLimit)
-            {
-                multiplayer.playerLimit = maxPlayers;
-            }
-
+            _multiplayer.playerLimit = maxPlayers;
+            
             if (Game1.netWorldState.Value.CurrentPlayerLimit.Value != maxPlayers)
             {
                 Game1.netWorldState.Value.CurrentPlayerLimit.Set(maxPlayers);
