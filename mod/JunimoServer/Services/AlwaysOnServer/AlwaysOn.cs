@@ -87,7 +87,7 @@ namespace JunimoServer.Services.AlwaysOnServer
             helper.Events.Input.ButtonPressed += OnButtonPressed;
             helper.Events.Display.Rendered += OnRendered;
             helper.Events.Specialized.UnvalidatedUpdateTicked +=
-                OnUnvalidatedUpdateTick; //used bc only thing that gets throug save window
+                OnUnvalidatedUpdateTick; //used bc only thing that gets through save window
             helper.Events.GameLoop.DayEnding += OnDayEnd;
 
             chatCommandApi.RegisterCommand("event", "Tries to start the current festival's event.", StartEvent);
@@ -96,7 +96,7 @@ namespace JunimoServer.Services.AlwaysOnServer
         private void OnDayEnd(object sender, DayEndingEventArgs e)
         {
             doWarpRoutineToGetToNextDay = false;
-            warpTickCounter = 0;
+            _warpTickCounter = 0;
         }
 
 
@@ -1116,7 +1116,7 @@ namespace JunimoServer.Services.AlwaysOnServer
         }
 
 
-        private int warpTickCounter = 0;
+        private int _warpTickCounter = 0;
 
         private void HandleWarpRoutine()
         {
@@ -1126,16 +1126,16 @@ namespace JunimoServer.Services.AlwaysOnServer
             _monitor.Log("attempting to warp to next day");
 
 
-            if (warpTickCounter % 10 == 1)
+            if (_warpTickCounter % 10 == 1)
             {
                 Game1.warpFarmer("FarmHouse", 64, 15, false);
             }
-            else if (warpTickCounter % 10 == 5)
+            else if (_warpTickCounter % 10 == 5)
             {
                 WarpToHidingSpot();
             }
 
-            warpTickCounter++;
+            _warpTickCounter++;
         }
 
 

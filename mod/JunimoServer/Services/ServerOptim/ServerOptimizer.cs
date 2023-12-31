@@ -129,9 +129,9 @@ namespace JunimoServer.Services.ServerOptim
             GC.Collect(generation: 1, GCCollectionMode.Forced, blocking: true);
             GC.Collect(generation: 2, GCCollectionMode.Forced, blocking: true);
             var after = checked ((long) Math.Round(Process.GetCurrentProcess().PrivateMemorySize64 / 1024.0 / 1024.0));
-            var beforeFormated = Strings.Format(before / 1024.0, "0.00") + " GB";
-            var afterFormated = Strings.Format(after / 1024.0, "0.00") + " GB";
-            _monitor.Log($"Ran GC {beforeFormated} -> {afterFormated}", LogLevel.Info);
+            var beforeFormatted = Strings.Format(before / 1024.0, "0.00") + " GB";
+            var afterFormatted = Strings.Format(after / 1024.0, "0.00") + " GB";
+            _monitor.Log($"Ran GC {beforeFormatted} -> {afterFormatted}", LogLevel.Info);
         }
 
         private void OnDayStarted(object sender, DayStartedEventArgs e)
