@@ -71,8 +71,8 @@ namespace JunimoServer.Services.CabinManager
 
             harmony.Patch(
                 original: AccessTools.Method(typeof(Multiplayer), "broadcastLocationMessage"),
-                postfix: new HarmonyMethod(typeof(CabinManagerOverrides),
-                    nameof(CabinManagerOverrides.broadcastLocationMessage_Postfix))
+                prefix: new HarmonyMethod(typeof(CabinManagerOverrides),
+                    nameof(CabinManagerOverrides.broadcastLocationMessage_Prefix))
             );
 
             harmony.Patch(

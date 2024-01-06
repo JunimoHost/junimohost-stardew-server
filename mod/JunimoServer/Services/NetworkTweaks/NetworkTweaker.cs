@@ -24,7 +24,7 @@ namespace JunimoServer.Services.NetworkTweaks
 
             _multiplayer ??= _helper.Reflection.GetField<Multiplayer>(typeof(Game1), "multiplayer").GetValue();
 
-            _multiplayer.defaultInterpolationTicks = 6;
+            _multiplayer.defaultInterpolationTicks = 7;
             _multiplayer.farmerDeltaBroadcastPeriod = 1;
             _multiplayer.locationDeltaBroadcastPeriod = 1;
             _multiplayer.worldStateDeltaBroadcastPeriod = 1;
@@ -41,8 +41,6 @@ namespace JunimoServer.Services.NetworkTweaks
             {
                 Game1.netWorldState.Value.HighestPlayerLimit.Set(maxPlayers);
             }
-
-            _multiplayer.UpdateLate(forceSync: true);
         }
     }
 }

@@ -109,6 +109,7 @@ namespace JunimoServer.Services.CabinManager
             return building.tileX.Value == CabinManagerService.HiddenCabinX
                    && building.tileY.Value == CabinManagerService.HiddenCabinY;
         }
+
         public static List<OriginalBuildingCoord> MoveCabinsAway(long playerId)
         {
             var cabinStack = GetStackLocation();
@@ -132,6 +133,7 @@ namespace JunimoServer.Services.CabinManager
 
                 return movedBuildings;
             }
+
             // CabinStack Strategy
             var ownerCabin = Game1.getFarm().buildings.First(building => building.isCabin);
 
@@ -165,7 +167,8 @@ namespace JunimoServer.Services.CabinManager
             }
 
             //swap out the building underneath where cabin will be placed 
-            var playersCabinGettingMoved = cabinsToMove.FirstOrDefault(building => ((Cabin)building.indoors.Value).owner.UniqueMultiplayerID == playerId);
+            var playersCabinGettingMoved = cabinsToMove.FirstOrDefault(building =>
+                ((Cabin)building.indoors.Value).owner.UniqueMultiplayerID == playerId);
             if (cabinStack.CabinChosen != null && playersCabinGettingMoved != null)
             {
                 var building = cabinStack.CabinChosen;
@@ -179,13 +182,12 @@ namespace JunimoServer.Services.CabinManager
             // handle normal cabins
             foreach (var building in cabinsToMove)
             {
-
                 var original = new OriginalBuildingCoord(building, building.tileX.Value, building.tileY.Value);
                 movedBuildings.Add(original);
 
                 building.tileX.Value = stackX;
                 building.tileY.Value = stackY;
-                
+
                 if (building == ownerCabin) continue;
 
                 var indoor = (Cabin)building.indoors.Value;
@@ -198,19 +200,21 @@ namespace JunimoServer.Services.CabinManager
 
             return movedBuildings;
         }
+
         private static StackLocation GetStackLocation()
         {
             if (_cabinManagerData.DefaultCabinLocation.HasValue)
             {
                 return new StackLocation(_cabinManagerData.DefaultCabinLocation.Value, null);
             }
-            
-            var nonHiddenCabins = Game1.getFarm().buildings.Where(building => building.isCabin && !IsBuildingInHiddenStack(building)).ToArray();
+
+            var nonHiddenCabins = Game1.getFarm().buildings
+                .Where(building => building.isCabin && !IsBuildingInHiddenStack(building)).ToArray();
             if (nonHiddenCabins.Length != 0)
             {
-                var cabinLocation = new Vector2(nonHiddenCabins.First().tileX.Value, nonHiddenCabins.First().tileY.Value);
+                var cabinLocation =
+                    new Vector2(nonHiddenCabins.First().tileX.Value, nonHiddenCabins.First().tileY.Value);
                 return new StackLocation(cabinLocation, nonHiddenCabins.First());
-
             }
 
             return new StackLocation(new Vector2(50, 14), null);
@@ -220,6 +224,7 @@ namespace JunimoServer.Services.CabinManager
         {
             public Vector2 Location;
             public Building CabinChosen;
+
             public StackLocation(Vector2 location, Building cabinChosen)
             {
                 Location = location;
@@ -255,65 +260,57 @@ namespace JunimoServer.Services.CabinManager
         }
 
 
-        public static void broadcastLocationMessage_Postfix(Multiplayer __instance, GameLocation loc,
+        public static bool broadcastLocationMessage_Prefix(Multiplayer __instance, GameLocation loc,
             OutgoingMessage message)
         {
-
-            if (loc.Name is not "Farm" || loc.Name.StartsWith("Cabin"))
-            {
-                return;
-            }
-
             if (Game1.IsClient)
             {
-                Game1.client.sendMessage(message);
-                return;
+                return true;
+            }
+
+            var interceptMessage = loc.Name.StartsWith("Farm") || loc.Name.StartsWith("Cabin");
+            if (!interceptMessage)
+            {
+                return true;
             }
 
             Action<Farmer> tellFarmer = delegate(Farmer f)
             {
-                if (f != Game1.player)
+                if (f == Game1.player)
+                    return;
+
+                var movedBuildings = MoveCabinsAway(f.UniqueMultiplayerID);
+                var data = __instance.writeObjectDeltaBytes(Game1.getFarm().Root);
+                MoveCabinsHome(movedBuildings);
+
+                var forgedMessage = new OutgoingMessage(6, Game1.player, new object[]
                 {
-                    var farm = Game1.getFarm();
+                    loc.isStructure.Value, loc.NameOrUniqueName, data
+                });
 
 
-                    var movedBuildings = MoveCabinsAway(f.UniqueMultiplayerID);
-
-                    byte[] data = __instance.writeObjectDeltaBytes(farm.Root as NetRoot<GameLocation>);
-
-                    MoveCabinsHome(movedBuildings);
-
-                    OutgoingMessage forgedMessage = new OutgoingMessage(6, Game1.player, new object[]
-                    {
-                        loc.isStructure.Value, loc.isStructure ? loc.uniqueName.Value : loc.name.Value, data
-                    });
-
-
-                    Game1.server.sendMessage(f.UniqueMultiplayerID, forgedMessage);
-                }
+                Game1.server.sendMessage(f.UniqueMultiplayerID, forgedMessage);
             };
+
+
             if (__instance.isAlwaysActiveLocation(loc))
             {
-                using (IEnumerator<Farmer> enumerator = Game1.otherFarmers.Values.GetEnumerator())
+                foreach (var farmer in Game1.otherFarmers.Values)
                 {
-                    while (enumerator.MoveNext())
-                    {
-                        Farmer farmer = enumerator.Current;
-                        tellFarmer(farmer);
-                    }
-
-                    return;
+                    tellFarmer(farmer);
+                }
+            }
+            else
+            {
+                foreach (var farmer in loc.farmers)
+                {
+                    tellFarmer(farmer);
                 }
             }
 
-            foreach (Farmer f3 in loc.farmers)
+            if (loc is BuildableGameLocation location)
             {
-                tellFarmer(f3);
-            }
-
-            if (loc is BuildableGameLocation)
-            {
-                foreach (Building building in (loc as BuildableGameLocation).buildings)
+                foreach (Building building in location.buildings)
                 {
                     if (building.indoors.Value != null)
                     {
@@ -324,6 +321,8 @@ namespace JunimoServer.Services.CabinManager
                     }
                 }
             }
+
+            return false;
         }
     }
 }
