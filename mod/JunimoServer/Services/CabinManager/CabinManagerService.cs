@@ -40,6 +40,7 @@ namespace JunimoServer.Services.CabinManager
                 CabinManagerOverrides.SetCabinManagerData(_data);
             }
         }
+
         private const string cabinManagerDataKey = "JunimoHost.CabinManager.data";
         private const int minEmptyCabins = 4;
         public const int HiddenCabinX = -20;
@@ -70,21 +71,10 @@ namespace JunimoServer.Services.CabinManager
 
 
             harmony.Patch(
-                original: AccessTools.Method(typeof(Multiplayer), "broadcastLocationMessage"),
+                original: AccessTools.Method(typeof(GameServer), "sendMessage",
+                    new[] { typeof(long), typeof(OutgoingMessage) }),
                 prefix: new HarmonyMethod(typeof(CabinManagerOverrides),
-                    nameof(CabinManagerOverrides.broadcastLocationMessage_Prefix))
-            );
-
-            harmony.Patch(
-                original: AccessTools.Method(typeof(GameServer), "sendLocation"),
-                prefix: new HarmonyMethod(typeof(CabinManagerOverrides),
-                    nameof(CabinManagerOverrides.sendLocation_Prefix))
-            );
-
-            harmony.Patch(
-                original: AccessTools.Method(typeof(GameServer), "sendLocation"),
-                postfix: new HarmonyMethod(typeof(CabinManagerOverrides),
-                    nameof(CabinManagerOverrides.sendLocation_Postfix))
+                    nameof(CabinManagerOverrides.sendMessage_Prefix))
             );
 
             harmony.Patch(
@@ -93,6 +83,7 @@ namespace JunimoServer.Services.CabinManager
                     nameof(CabinManagerOverrides.sendServerIntroduction_Postfix))
             );
         }
+
         private void OnServerJoined(long peerId)
         {
             Data.AllPlayerIdsEverJoined.Add(peerId);
@@ -103,7 +94,6 @@ namespace JunimoServer.Services.CabinManager
 
         private void OnTicked(object sender, UpdateTickedEventArgs e)
         {
-
             MonitorFarmhouse();
         }
 
@@ -158,7 +148,6 @@ namespace JunimoServer.Services.CabinManager
                 farmersCabinUniqueLocation, farmersCabinEntrypoint.X, farmersCabinEntrypoint.Y, true
             });
         }
-
 
 
         private void OnSaveLoaded(object sender, SaveLoadedEventArgs e)
