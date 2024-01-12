@@ -19,17 +19,19 @@ namespace JunimoServer.Services.GameCreator
         private static readonly Mutex CreateGameMutex = new Mutex();
         private readonly PersistentOptions _options;
         private readonly IMonitor _monitor;
+        private readonly IModHelper _helper;
 
         public bool GameIsCreating { get; private set; }
 
         public GameCreatorService(GameLoaderService gameLoader, PersistentOptions options, IMonitor monitor,
-            DaemonService daemonService, CabinManagerService cabinManagerService)
+            DaemonService daemonService, CabinManagerService cabinManagerService, IModHelper helper)
         {
             _daemonService = daemonService;
             _options = options;
             _gameLoader = gameLoader;
             _monitor = monitor;
             _cabinManagerService = cabinManagerService;
+            _helper = helper;
         }
 
         public bool CreateNewGameFromDaemonConfig()
@@ -65,7 +67,16 @@ namespace JunimoServer.Services.GameCreator
             Game1.player.team.useSeparateWallets.Value = config.UseSeparateWallets;
             Game1.startingCabins = 1;
 
-            Game1.whichFarm = config.WhichFarm;
+            var isUltimateFarmModLoaded = _helper.ModRegistry.GetAll().Any(mod => mod.Manifest.Name == "Ultimate Farm CP");
+            if (isUltimateFarmModLoaded)
+            {
+                Game1.whichFarm = 1; // Ultimate Farm CP expects riverland == 1
+            }
+            else
+            {
+                Game1.whichFarm = config.WhichFarm;
+            }
+            
             var isWildernessFarm = config.WhichFarm == 4;
             Game1.spawnMonstersAtNight = isWildernessFarm;
 

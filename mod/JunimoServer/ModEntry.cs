@@ -91,7 +91,7 @@ namespace JunimoServer
             var gameTweaker = new GameTweaker(helper);
             var cabinManager = new CabinManagerService(helper, Monitor, harmony, options);
             _gameCreatorService =
-                new GameCreatorService(_gameLoaderService, options, Monitor, _daemonService, cabinManager);
+                new GameCreatorService(_gameLoaderService, options, Monitor, _daemonService, cabinManager, helper);
             var networkTweaker = new NetworkTweaker(helper, options);
             var desyncKicker = new DesyncKicker(helper, Monitor);
 
