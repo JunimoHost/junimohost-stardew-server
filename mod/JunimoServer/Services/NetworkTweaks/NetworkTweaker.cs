@@ -24,9 +24,9 @@ namespace JunimoServer.Services.NetworkTweaks
 
             _multiplayer ??= _helper.Reflection.GetField<Multiplayer>(typeof(Game1), "multiplayer").GetValue();
 
-            _multiplayer.defaultInterpolationTicks = 8;
+            _multiplayer.defaultInterpolationTicks = 7;
             _multiplayer.farmerDeltaBroadcastPeriod = 1;
-            _multiplayer.locationDeltaBroadcastPeriod = 5;
+            _multiplayer.locationDeltaBroadcastPeriod = 1;
             _multiplayer.worldStateDeltaBroadcastPeriod = 1;
 
             var maxPlayers = _options.Data.MaxPlayers;
